@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = Field(default="1.0.0")
 
     # ── CORS ──────────────────────────────────────────────────────────
-    ALLOWED_ORIGINS: list[str] = Field(
+    ALLOWED_ORIGINS: Union[list[str], str] = Field(
         default=[
             "http://localhost:3000",
             "http://localhost:5173",
@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     )
 
     # ── Trusted Hosts ─────────────────────────────────────────────────
-    ALLOWED_HOSTS: list[str] = Field(
+    ALLOWED_HOSTS: Union[list[str], str] = Field(
         default=["localhost", "127.0.0.1"],
         description="List of allowed hosts for TrustedHostMiddleware in non-development mode.",
     )

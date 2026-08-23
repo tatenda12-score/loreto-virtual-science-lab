@@ -57,8 +57,8 @@ class TestBatch3(unittest.TestCase):
     # Requirement C: Production CORS Configuration
     # -----------------------------------------------------------------------
     def test_c_cors_configuration_parsing(self):
-        """C. Verify ALLOWED_ORIGINS parses comma-separated strings and JSON arrays."""
-        # Comma-separated
+        """C. Verify ALLOWED_ORIGINS parses comma-separated strings and JSON arrays from env and kwargs."""
+        # Comma-separated kwargs
         s1 = Settings(
             DATABASE_URL="sqlite:///./test.db",
             ALLOWED_ORIGINS="https://loreto-lab.vercel.app, https://custom.domain.org",
@@ -68,7 +68,7 @@ class TestBatch3(unittest.TestCase):
             ["https://loreto-lab.vercel.app", "https://custom.domain.org"],
         )
 
-        # JSON array string
+        # JSON array string kwargs
         s2 = Settings(
             DATABASE_URL="sqlite:///./test.db",
             ALLOWED_ORIGINS='["https://app1.vercel.app", "https://app2.vercel.app"]',
@@ -77,6 +77,21 @@ class TestBatch3(unittest.TestCase):
             s2.ALLOWED_ORIGINS,
             ["https://app1.vercel.app", "https://app2.vercel.app"],
         )
+
+        # Environment variable source (EnvSettingsSource)
+        old_env = os.environ.get("ALLOWED_ORIGINS")
+        try:
+            os.environ["ALLOWED_ORIGINS"] = "https://loreto-lab.vercel.app, https://custom.domain.org"
+            s3 = Settings(DATABASE_URL="sqlite:///./test.db")
+            self.assertEqual(
+                s3.ALLOWED_ORIGINS,
+                ["https://loreto-lab.vercel.app", "https://custom.domain.org"],
+            )
+        finally:
+            if old_env is not None:
+                os.environ["ALLOWED_ORIGINS"] = old_env
+            else:
+                os.environ.pop("ALLOWED_ORIGINS", None)
 
     # -----------------------------------------------------------------------
     # Requirement D & E: Secret Key Validation
@@ -135,15 +150,39 @@ class TestBatch3(unittest.TestCase):
     # Requirement H: Trusted Host Configuration
     # -----------------------------------------------------------------------
     def test_h_trusted_host_configuration_parsing(self):
-        """H. Verify ALLOWED_HOSTS parses comma-separated strings without wildcards."""
-        s = Settings(
+        """H. Verify ALLOWED_HOSTS parses comma-separated strings without wildcards from env and kwargs."""
+        # Comma-separated kwargs
+        s1 = Settings(
             DATABASE_URL="sqlite:///./test.db",
             ALLOWED_HOSTS="localhost, 127.0.0.1, api-prod.onrender.com",
         )
         self.assertEqual(
-            s.ALLOWED_HOSTS,
+            s1.ALLOWED_HOSTS,
             ["localhost", "127.0.0.1", "api-prod.onrender.com"],
         )
+
+        # Environment variable source (EnvSettingsSource) matching Render configuration
+        old_hosts = os.environ.get("ALLOWED_HOSTS")
+        try:
+            os.environ["ALLOWED_HOSTS"] = "localhost,127.0.0.1,my-service.onrender.com"
+            s2 = Settings(DATABASE_URL="sqlite:///./test.db")
+            self.assertEqual(
+                s2.ALLOWED_HOSTS,
+                ["localhost", "127.0.0.1", "my-service.onrender.com"],
+            )
+
+            # JSON array via environment variable
+            os.environ["ALLOWED_HOSTS"] = '["localhost", "127.0.0.1", "my-service.onrender.com"]'
+            s3 = Settings(DATABASE_URL="sqlite:///./test.db")
+            self.assertEqual(
+                s3.ALLOWED_HOSTS,
+                ["localhost", "127.0.0.1", "my-service.onrender.com"],
+            )
+        finally:
+            if old_hosts is not None:
+                os.environ["ALLOWED_HOSTS"] = old_hosts
+            else:
+                os.environ.pop("ALLOWED_HOSTS", None)
 
     # -----------------------------------------------------------------------
     # Requirement I: Vercel SPA Configuration
