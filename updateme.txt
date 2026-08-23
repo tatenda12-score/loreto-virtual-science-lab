@@ -1,0 +1,385 @@
+================================================================================
+  VIRTUAL SCIENCE LABORATORY SYSTEM — PROJECT UPDATE
+  Loreto High School
+  Last updated: 23 August 2026
+================================================================================
+
+
+================================================================================
+1. PROJECT OVERVIEW
+================================================================================
+
+Name:           Virtual Science Laboratory System
+Purpose:        A full-stack web application that allows students at Loreto High
+                School to run virtual science experiments (Physics, Chemistry,
+                Biology), submit lab reports with observations, and receive
+                auto-graded scores. Teachers can review submissions, provide
+                written feedback, and override scores.
+
+Target Users:
+  - Students    → Run experiments, submit observations, view scores
+  - Teachers    → Create experiments, view all submissions, grade/feedback
+  - Admins      → Full system access (teacher capabilities + delete experiments)
+
+
+================================================================================
+2. TECHNOLOGY STACK
+================================================================================
+
+--- BACKEND ---
+  Language:         Python 3.12+
+  Framework:        FastAPI
+  Server:           Uvicorn (dev), Gunicorn + Uvicorn workers (prod)
+  Database:         SQLite (dev — loreto_lab.db), PostgreSQL-ready
+  ORM:              SQLAlchemy 2.0 (Mapped columns, DeclarativeBase)
+  Migrations:       Alembic
+  Auth:             JWT (python-jose, HS256 algorithm)
+  Password Hashing: passlib + bcrypt (v4.0.1)
+  Validation:       Pydantic v2 + pydantic-settings
+  Env Management:   python-dotenv (.env file)
+  API Versioning:   /api/v1/ prefix
+
+--- FRONTEND ---
+  Language:         TypeScript
+  Framework:        React 19 (with Vite 8 as build tool)
+  Routing:          react-router-dom v7
+  HTTP Client:      Axios (with interceptors for JWT + 401 handling)
+  Styling:          TailwindCSS v4 (@tailwindcss/vite plugin)
+  UI Components:    Radix UI (react-slot), class-variance-authority, clsx,
+                    tailwind-merge, lucide-react icons
+  Linting:          oxlint
+  Path Aliases:     @ → src/ (configured in vite.config.ts + tsconfig)
+
+--- DEV TOOLING ---
+  Version Control:  Git (.gitignore configured)
+  Proxy:            Vite dev server proxies /api → http://localhost:8000
+  Ports:            Backend: 8000, Frontend: 5173
+
+
+================================================================================
+3. PROJECT STRUCTURE
+================================================================================
+
+Virtual Science/
+├── .gitignore
+├── requirements.txt              # Python dependencies
+│
+├── backend/
+│   ├── .env                      # Environment variables (DB URL, JWT secret, etc.)
+│   ├── alembic.ini               # Alembic migration config
+│   ├── alembic/                  # Migration scripts
+│   │   ├── env.py
+│   │   ├── script.py.mako
+│   │   └── versions/
+│   ├── loreto_lab.db             # SQLite database file (dev)
+│   ├── scripts/
+│   │   └── seed.py               # Database seeder (demo users + experiments + submissions)
+│   └── app/
+│       ├── __init__.py
+│       ├── main.py               # FastAPI app factory, middleware, health checks
+│       ├── core/
+│       │   ├── config.py         # pydantic-settings config singleton
+│       │   └── security.py       # Password hashing + JWT create/decode
+│       ├── db/
+│       │   └── database.py       # SQLAlchemy engine, session, Base, get_db dependency
+│       ├── models/
+│       │   ├── __init__.py       # Imports all models
+│       │   ├── user.py           # User model (admin/teacher/student roles)
+│       │   ├── experiment.py     # Experiment model (Physics/Chemistry/Biology)
+│       │   └── submission.py     # Submission model (draft → submitted → graded)
+│       ├── schemas/
+│       │   ├── user_schema.py    # Pydantic schemas: UserCreate, UserResponse
+│       │   ├── experiment_schema.py  # ExperimentCreate, ExperimentUpdate, ExperimentResponse
+│       │   ├── submission_schema.py  # SubmissionCreate, SubmissionUpdate, SubmissionResponse
+│       │   └── token_schema.py   # Token, TokenPayload schemas
+│       ├── api/
+│       │   ├── deps.py           # Auth dependencies: get_current_user, require_roles()
+│       │   └── v1/
+│       │       ├── router.py     # Aggregates all v1 endpoint routers
+│       │       └── endpoints/
+│       │           ├── auth.py           # POST /register, POST /login, GET /me
+│       │           ├── experiments.py    # CRUD: POST, GET list, GET by ID, PATCH, DELETE
+│       │           └── submissions.py    # POST submit, GET /me, GET /experiment/{id}, PATCH grade
+│       └── services/
+│           └── science_engine.py # Simulation + auto-grading engine (pure functions)
+│
+└── frontend/
+    ├── index.html
+    ├── package.json
+    ├── vite.config.ts            # Vite config with TailwindCSS plugin + API proxy
+    ├── tsconfig.json / tsconfig.app.json / tsconfig.node.json
+    ├── components.json           # shadcn/ui config
+    └── src/
+        ├── main.tsx              # React DOM entry point (BrowserRouter)
+        ├── App.tsx               # Route definitions + ProtectedRoute + AuthRoute
+        ├── App.css               # Global styles
+        ├── index.css             # TailwindCSS base
+        ├── contexts/
+        │   └── AuthContext.tsx    # AuthProvider: login/logout, token rehydration
+        ├── services/
+        │   └── api.ts            # Axios instance, interceptors, typed API functions
+        ├── pages/
+        │   ├── Login.tsx         # Login page (glassmorphism design, demo creds shown)
+        │   ├── StudentDashboard.tsx   # Student home: experiments grid, submissions table
+        │   └── TeacherDashboard.tsx   # Teacher home: experiments list, grading panel
+        ├── components/
+        │   ├── ui/
+        │   │   ├── button.tsx    # shadcn/ui Button
+        │   │   ├── card.tsx      # shadcn/ui Card
+        │   │   ├── input.tsx     # shadcn/ui Input
+        │   │   └── label.tsx     # shadcn/ui Label
+        │   └── experiments/
+        │       └── OhmsLawSimulation.tsx  # Interactive Ohm's Law virtual lab
+        └── lib/                  # Utility functions
+
+
+================================================================================
+4. WHAT HAS BEEN BUILT (COMPLETED FEATURES)
+================================================================================
+
+--- BACKEND (100% functional) ---
+
+  [x] FastAPI application with lifespan hooks and structured logging
+  [x] CORS middleware (localhost:3000, localhost:5173 allowed)
+  [x] TrustedHost middleware for production
+  [x] Global exception handler (catch-all → 500 JSON response)
+  [x] Health check endpoints: GET /health, GET /health/db
+
+  [x] SQLAlchemy 2.0 ORM models:
+      - User (id, full_name, email, hashed_password, role, is_active,
+              is_verified, class_level, subject_code, gender, timestamps)
+      - Experiment (id, title, subject, difficulty, description,
+                    instructions (JSON), parameters (JSON), created_by, timestamps)
+      - Submission (id, student_id, experiment_id, recorded_observations (JSON),
+                    calculated_score, teacher_feedback, status, timestamps)
+
+  [x] Role-based access control (RBAC):
+      - UserRole enum: admin, teacher, student
+      - require_roles() dependency factory for endpoint-level permission checks
+      - OAuth2PasswordBearer token flow
+
+  [x] Authentication system:
+      - POST /api/v1/auth/register  → create account (defaults to student role)
+      - POST /api/v1/auth/login     → OAuth2 password flow → JWT access token
+      - GET  /api/v1/auth/me        → authenticated user profile
+      - bcrypt password hashing with constant-time verification
+      - JWT tokens with configurable expiry (default 30 min)
+
+  [x] Experiments CRUD:
+      - POST   /api/v1/experiments/        → create (teacher/admin only)
+      - GET    /api/v1/experiments/        → list all (any auth user, paginated)
+      - GET    /api/v1/experiments/{id}    → single experiment
+      - PATCH  /api/v1/experiments/{id}    → update (teacher/admin)
+      - DELETE /api/v1/experiments/{id}    → hard delete (admin only)
+
+  [x] Submissions system:
+      - POST  /api/v1/submissions/                 → student submits observations
+      - GET   /api/v1/submissions/me               → student's own submissions
+      - GET   /api/v1/submissions/{id}             → single submission (owner or teacher)
+      - GET   /api/v1/submissions/experiment/{id}  → all subs for experiment (teacher/admin)
+      - PATCH /api/v1/submissions/{id}/grade       → teacher grades (feedback + score override)
+
+  [x] Science Engine (services/science_engine.py):
+      - calculate_ohms_law(voltage, resistance) → current, power
+      - calculate_velocity(distance, time) → velocity
+      - calculate_titration(vol_acid, molarity_acid, vol_base) → molarity_base, moles
+      - calculate_ph(H+ concentration) → pH
+      - evaluate_submission() → score single measurement (linear decay model)
+      - grade_submission() → average score across all graded fields
+
+  [x] Auto-grading on submission:
+      - When student submits, the engine compares observations against
+        experiment.parameters.expected_values using tolerance-based scoring
+      - Score is stored in submission.calculated_score automatically
+
+  [x] Database seeder (scripts/seed.py):
+      - Idempotent seed script
+      - Creates: 1 admin, 1 teacher, 3 students
+      - Creates: Ohm's Law experiment + Acid-Base Titration experiment
+      - Creates: 3 sample submissions with realistic noisy data
+      - All seed users share password: Demo123!
+
+  [x] Alembic migration infrastructure configured
+
+--- FRONTEND (100% functional) ---
+
+  [x] Vite + React + TypeScript project scaffolded
+  [x] TailwindCSS v4 integrated via Vite plugin
+  [x] API proxy configured (frontend :5173 → backend :8000)
+
+  [x] Authentication:
+      - AuthContext provider (login, logout, token rehydration on mount)
+      - JWT stored in localStorage (key: vsl_access_token)
+      - Axios request interceptor auto-attaches Bearer token
+      - Axios response interceptor redirects to /login on 401
+
+  [x] Routing:
+      - /login     → public (redirects if already logged in)
+      - /student   → protected (student role only)
+      - /teacher   → protected (teacher/admin role)
+      - /          → smart redirect based on role
+      - *          → fallback to /login
+
+  [x] Login page:
+      - Premium glassmorphism design with animated gradient orbs
+      - Email + password form with validation
+      - Loading spinner + error display
+      - Demo credentials shown on the login card
+
+  [x] Student Dashboard:
+      - Welcome banner with user info and stats (experiments, submissions, avg score)
+      - Experiments grid with subject-colored cards
+      - "Interactive" badge for Ohm's Law experiment
+      - Click to launch experiment (opens modal)
+      - Generic JSON modal for non-interactive experiments
+      - Full interactive Ohm's Law simulation modal
+      - Submissions table (experiment name, status badge, score, feedback, date)
+      - Toast notifications on submission success
+      - Refresh button for submissions
+
+  [x] Teacher Dashboard:
+      - Welcome banner with experiment count, pending, and graded stats
+      - Experiments sidebar list (click to load submissions)
+      - Submissions panel showing all student submissions for selected experiment
+      - Inline grading form: feedback textarea + score override input
+      - Status badges (Draft → Pending → Graded)
+      - Observations displayed as formatted JSON
+
+  [x] Ohm's Law Interactive Simulation (OhmsLawSimulation.tsx):
+      - Animated SVG circuit diagram (battery + resistor + ammeter)
+      - Electron flow animation (speed proportional to current)
+      - Voltage slider (1–24V) and Resistance slider (1–100Ω)
+      - Needle-sweep ammeter visualization
+      - Digital multimeter readout with glowing display
+      - Real-time theoretical current calculation (I = V/R)
+      - Student observation input field
+      - Colour-coded accuracy feedback (green/amber/red with % error)
+      - Formula reminder panel
+      - Submit Lab Report button → auto-graded backend submission
+
+  [x] UI Components (shadcn/ui style):
+      - Button, Card, Input, Label components
+      - Consistent dark theme with violet/cyan/emerald accent palette
+
+
+================================================================================
+5. DEMO / SEED DATA
+================================================================================
+
+All seed accounts use the password: Demo123!
+
+  ROLE       EMAIL                      EXTRA INFO
+  ─────────  ─────────────────────────  ──────────────────────
+  Admin      admin@loreto.edu.ng        Full system access
+  Teacher    teacher@loreto.edu.ng      Subject: PHY301
+  Student    student1@loreto.edu.ng     Class: SS2 (Amaka)
+  Student    student2@loreto.edu.ng     Class: SS1 (Chidi)
+  Student    student3@loreto.edu.ng     Class: JSS3 (Ngozi)
+
+Seeded Experiments:
+  1. "Ohm's Law — Voltage, Current & Power"     (Physics / Intermediate)
+  2. "Acid-Base Titration — Determining NaOH"    (Chemistry / Advanced)
+
+Seeded Submissions:
+  - All 3 students submitted Ohm's Law with slightly noisy data
+  - Auto-graded scores vary by accuracy (Amaka best, Ngozi borderline)
+
+
+================================================================================
+6. HOW TO RUN THE PROJECT
+================================================================================
+
+--- Backend ---
+  cd backend
+  pip install -r ../requirements.txt
+  python -m scripts.seed          # seed the database (first time)
+  uvicorn app.main:app --reload --port 8000
+
+--- Frontend ---
+  cd frontend
+  npm install                     # install node_modules (first time)
+  npm run dev                     # starts Vite on http://localhost:5173
+
+--- Access ---
+  Frontend:  http://localhost:5173
+  API Docs:  http://localhost:8000/docs   (Swagger UI, dev only)
+  API ReDoc: http://localhost:8000/redoc  (dev only)
+
+
+================================================================================
+7. ENVIRONMENT VARIABLES (backend/.env)
+================================================================================
+
+  DATABASE_URL=sqlite:///./loreto_lab.db
+  SECRET_KEY=change-me-to-a-long-random-string
+  ALGORITHM=HS256
+  ACCESS_TOKEN_EXPIRE_MINUTES=30
+  APP_ENV=development
+  APP_TITLE=Virtual Science Laboratory System
+  APP_VERSION=1.0.0
+
+
+================================================================================
+8. WHERE WE LEFT OFF / CURRENT STATUS
+================================================================================
+
+The application is FULLY FUNCTIONAL end-to-end for the core workflow:
+  Login → View experiments → Launch Ohm's Law simulation → Submit observations
+  → Auto-grading → Teacher views submissions → Teacher grades with feedback
+
+WHAT IS WORKING:
+  ✔ Backend API is complete and running
+  ✔ All authentication and RBAC is working
+  ✔ Experiments CRUD is working
+  ✔ Submissions with auto-grading is working
+  ✔ Science engine (Ohm's Law, Titration, pH, Velocity) is working
+  ✔ Database seeder populates demo data successfully
+  ✔ Frontend login flow with JWT auth is working
+  ✔ Student dashboard with interactive Ohm's Law simulation is working
+  ✔ Teacher dashboard with grading panel is working
+  ✔ Vite proxy to FastAPI backend is working
+
+WHAT COULD BE DONE NEXT (not yet built):
+  - Additional interactive simulations (Titration, pH, Velocity)
+  - Admin panel for user management (create/deactivate users)
+  - Student registration page (currently only via API POST /register)
+  - Email verification flow
+  - Password reset functionality
+  - Experiment creation form on the frontend (currently API-only)
+  - File/image upload for experiment instructions
+  - Student leaderboard / analytics
+  - Print/export lab reports as PDF
+  - Deploy to production (PostgreSQL, domain, HTTPS)
+  - Unit tests (backend + frontend)
+  - Mobile responsive polish
+  - Biology experiments
+
+
+================================================================================
+9. KEY DESIGN DECISIONS
+================================================================================
+
+  1. Single User table for all roles (admin/teacher/student) with nullable
+     role-specific columns (class_level, subject_code) — avoids separate tables.
+
+  2. Science engine is pure functions (no DB, no FastAPI) — easy to test and
+     extend with new experiment types.
+
+  3. Auto-grading uses percentage-error with linear decay scoring model:
+     perfect = 100, at tolerance boundary = 0, clamped at 0.
+
+  4. Experiment.parameters stores expected_values + tolerance in JSON, making
+     the grading engine generic across any experiment type.
+
+  5. Submission lifecycle: draft → submitted → graded, enforced at API level.
+
+  6. Frontend uses Vite proxy to avoid CORS issues during development;
+     production would use reverse proxy (nginx) or same-origin deployment.
+
+  7. JWT tokens stored in localStorage (simple for demo; production should
+     consider httpOnly cookies for better security).
+
+
+================================================================================
+END OF UPDATE
+================================================================================
