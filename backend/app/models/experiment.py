@@ -99,12 +99,12 @@ class Experiment(Base):
         comment="Human-readable experiment title",
     )
     subject: Mapped[Subject] = mapped_column(
-        SAEnum(Subject, name="subject_enum", create_type=True),
+        SAEnum(Subject, name="subject_enum", create_type=True, values_callable=lambda obj: [e.value for e in obj]),
         nullable=False,
         comment="Curriculum subject area",
     )
     difficulty: Mapped[Difficulty] = mapped_column(
-        SAEnum(Difficulty, name="difficulty_enum", create_type=True),
+        SAEnum(Difficulty, name="difficulty_enum", create_type=True, values_callable=lambda obj: [e.value for e in obj]),
         nullable=False,
         default=Difficulty.beginner,
         comment="Difficulty tier for student guidance",
