@@ -47,7 +47,14 @@ async def lifespan(app: FastAPI):
     logger.info("🔬 Virtual Science Lab API starting up …")
     logger.info(f"   Environment : {settings.APP_ENV}")
     logger.info(f"   Version     : {settings.APP_VERSION}")
-    # Future: await database.connect() / redis_pool.init() etc.
+
+    # Ensure initial admin/demo users exist (idempotent startup initialization)
+    try:
+        from scripts.seed import run_seed
+        run_seed()
+    except Exception as exc:
+        logger.warning(f"Startup initialization note: {exc}")
+
     yield
     logger.info("Virtual Science Lab API shutting down. Goodbye!")
     # Future: await database.disconnect() / redis_pool.close() etc.
