@@ -277,10 +277,24 @@ def _upsert_users(db) -> dict[str, User]:
     for data in SEED_USERS:
         existing = db.query(User).filter(User.email == data["email"]).first()
         if existing:
-            print(f"  [SKIP] User already exists: {data['email']}")
+            # Ensure the password hash matches Demo123! in case it was created with an old hash
+            existing.hashed_password = hash_password(DEFAULT_PASSWORD)
+            existing.is_active = True
+            db.flush()
+            print(f"  [OK]   Synchronized user: {data['email']}")
             created[data["email"]] = existing
         else:
-            user = User(**data, is_active=True, is_verified=True)
+            user = User(
+                full_name=data["full_name"],
+                email=data["email"],
+                hashed_password=hash_password(DEFAULT_PASSWORD),
+                role=data["role"],
+                subject_code=data.get("subject_code"),
+                class_level=data.get("class_level"),
+                gender=data.get("gender"),
+                is_active=True,
+                is_verified=True,
+            )
             db.add(user)
             db.flush()
             print(f"  [OK]   Created user: {data['email']}  (role={data['role'].value})")
