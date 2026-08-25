@@ -12,6 +12,7 @@ Adding a new feature router
 
 from fastapi import APIRouter
 
+from app.api.v1.endpoints.admin import router as admin_router
 from app.api.v1.endpoints.auth import router as auth_router
 from app.api.v1.endpoints.experiments import router as experiments_router
 from app.api.v1.endpoints.submissions import router as submissions_router
@@ -42,6 +43,9 @@ v1_router.include_router(
     tags=["Submissions"],
 )
 
-# ── Future routers ───────────────────────────────────────────────────────────
-# from app.api.v1.endpoints.users import router as users_router
-# v1_router.include_router(users_router, prefix="/users", tags=["Users"])
+# ── Admin ────────────────────────────────────────────────────────────────────
+v1_router.include_router(
+    admin_router,
+    prefix="/admin",
+    tags=["Admin"],
+)

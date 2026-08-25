@@ -13,7 +13,7 @@
  */
 
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function Login() {
@@ -31,7 +31,7 @@ export default function Login() {
     setLoading(true)
     try {
       const profile = await login(email.trim(), password)
-      const destination = profile.role === 'student' ? '/student' : '/teacher'
+      const destination = profile.role === 'student' ? '/student' : profile.role === 'admin' ? '/admin' : '/teacher'
       navigate(destination, { replace: true })
     } catch {
       setError('Invalid email or password. Please try again.')
@@ -146,12 +146,14 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Demo credentials hint */}
-          <div className="mt-6 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
-            <p className="text-xs text-cyan-400 font-medium mb-1">Demo credentials</p>
-            <p className="text-xs text-slate-400">Teacher: <span className="text-slate-300">teacher@loreto.edu.ng</span></p>
-            <p className="text-xs text-slate-400">Student: <span className="text-slate-300">student1@loreto.edu.ng</span></p>
-            <p className="text-xs text-slate-400">Password: <span className="text-slate-300">Demo123!</span></p>
+          {/* Register link */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-slate-400">
+              New student?{' '}
+              <Link to="/register" className="text-violet-400 hover:text-violet-300 font-medium transition-colors">
+                Create an account
+              </Link>
+            </p>
           </div>
         </div>
       </div>

@@ -409,6 +409,9 @@ export default function StudentDashboard() {
                       <h3 className="font-semibold text-white text-sm leading-snug mb-1 group-hover:text-violet-300 transition-colors">
                         {exp.title}
                       </h3>
+                      {exp.topic && (
+                        <p className="text-xs text-violet-400/80 mb-1 font-medium">{exp.topic}</p>
+                      )}
                       <p className="text-xs text-slate-400 mb-4 line-clamp-2">{exp.description}</p>
                       <button
                         id={`launch-exp-${exp.id}`}

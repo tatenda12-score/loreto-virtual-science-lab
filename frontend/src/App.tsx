@@ -7,8 +7,10 @@
  * ----------------
  *   /           → redirect based on auth state
  *   /login      → public (redirects away if already logged in)
+ *   /register   → public (redirects away if already logged in)
  *   /student    → protected (student role)
- *   /teacher    → protected (teacher | admin role)
+ *   /teacher    → protected (teacher role only)
+ *   /admin      → protected (admin role only)
  *   *           → fallback redirect to /login
  *
  * The AuthProvider is mounted here so all routes have access to
@@ -18,8 +20,10 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import Login            from '@/pages/Login'
+import Register         from '@/pages/Register'
 import StudentDashboard from '@/pages/StudentDashboard'
 import TeacherDashboard from '@/pages/TeacherDashboard'
+import AdminDashboard   from '@/pages/AdminDashboard'
 
 // ── Loading spinner ──────────────────────────────────────────────────────────
 function FullPageSpinner() {
@@ -48,7 +52,7 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // Role mismatch: redirect user to their authorized home dashboard
-    const dest = user.role === 'student' ? '/student' : '/teacher'
+    const dest = user.role === 'student' ? '/student' : user.role === 'admin' ? '/admin' : '/teacher'
     return <Navigate to={dest} replace />
   }
 
@@ -61,8 +65,8 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
 
   if (loading) return <FullPageSpinner />
   if (user) {
-    // Role-based redirect from login page
-    const dest = user.role === 'student' ? '/student' : '/teacher'
+    // Role-based redirect from login/register page
+    const dest = user.role === 'student' ? '/student' : user.role === 'admin' ? '/admin' : '/teacher'
     return <Navigate to={dest} replace />
   }
   return <>{children}</>
@@ -73,7 +77,8 @@ function RootRedirect() {
   const { user, loading } = useAuth()
   if (loading) return <FullPageSpinner />
   if (!user)   return <Navigate to="/login" replace />
-  return <Navigate to={user.role === 'student' ? '/student' : '/teacher'} replace />
+  const dest = user.role === 'student' ? '/student' : user.role === 'admin' ? '/admin' : '/teacher'
+  return <Navigate to={dest} replace />
 }
 
 // ── App routes (inside AuthProvider) ─────────────────────────────────────────
@@ -90,6 +95,15 @@ function AppRoutes() {
         }
       />
 
+      <Route
+        path="/register"
+        element={
+          <AuthRoute>
+            <Register />
+          </AuthRoute>
+        }
+      />
+
       {/* Protected — student only */}
       <Route
         path="/student"
@@ -100,12 +114,22 @@ function AppRoutes() {
         }
       />
 
-      {/* Protected — teacher / admin */}
+      {/* Protected — teacher only */}
       <Route
         path="/teacher"
         element={
-          <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+          <ProtectedRoute allowedRoles={['teacher']}>
             <TeacherDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected — admin only */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AdminDashboard />
           </ProtectedRoute>
         }
       />

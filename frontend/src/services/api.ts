@@ -8,7 +8,7 @@
  *  - Base URL points to FastAPI backend at /api/v1
  *  - Request interceptor automatically attaches JWT from localStorage
  *  - Response interceptor redirects to /login on 401 (token expired / missing)
- *  - Typed helper functions for common auth actions
+ *  - Typed helper functions for all API operations
  */
 
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
@@ -75,17 +75,72 @@ export interface UserProfile {
   updated_at:    string
 }
 
+export interface RegisterPayload {
+  full_name:    string
+  email:        string
+  password:     string
+  class_level?: string
+  gender?:      string
+}
+
+export interface TeacherCreatePayload {
+  full_name:    string
+  email:        string
+  password:     string
+  subject_code?: string
+  gender?:      string
+}
+
+export interface AdminUserUpdatePayload {
+  full_name?:    string
+  email?:        string
+  subject_code?: string
+  class_level?:  string
+  gender?:       string
+  is_active?:    boolean
+}
+
+export interface AdminStats {
+  total_students:        number
+  total_teachers:        number
+  total_admins:          number
+  total_experiments:     number
+  published_experiments: number
+  draft_experiments:     number
+  archived_experiments:  number
+  total_submissions:     number
+  graded_submissions:    number
+  pending_submissions:   number
+}
+
+export interface ExperimentCreatePayload {
+  title:            string
+  description:      string
+  subject:          'Physics' | 'Chemistry' | 'Biology'
+  difficulty?:      'Beginner' | 'Intermediate' | 'Advanced'
+  simulation_type?: 'ohms_law' | 'titration' | 'velocity' | 'ph' | 'generic'
+  status?:          'draft' | 'published' | 'archived'
+  topic?:           string
+  materials?:       string[] | Record<string, unknown>
+  instructions?:    Record<string, unknown>[]
+  parameters?:      Record<string, unknown>
+}
+
 export interface Experiment {
-  id:           number
-  title:        string
-  subject:      'Physics' | 'Chemistry' | 'Biology'
-  difficulty:   'Beginner' | 'Intermediate' | 'Advanced'
-  description:  string
-  instructions: Record<string, unknown>[] | null
-  parameters:   Record<string, unknown> | null
-  created_by:   number | null
-  created_at:   string
-  updated_at:   string
+  id:              number
+  title:           string
+  subject:         'Physics' | 'Chemistry' | 'Biology'
+  difficulty:      'Beginner' | 'Intermediate' | 'Advanced'
+  simulation_type: 'ohms_law' | 'titration' | 'velocity' | 'ph' | 'generic'
+  status:          'draft' | 'published' | 'archived'
+  topic:           string | null
+  description:     string
+  materials:       string[] | Record<string, unknown> | null
+  instructions:    Record<string, unknown>[] | null
+  parameters:      Record<string, unknown> | null
+  created_by:      number | null
+  created_at:      string
+  updated_at:      string
 }
 
 export interface Submission {
@@ -118,28 +173,90 @@ export async function loginUser(email: string, password: string): Promise<string
   return res.data.access_token
 }
 
+/** Register a new student account. */
+export async function registerStudent(data: RegisterPayload): Promise<UserProfile> {
+  const res = await api.post<UserProfile>('/auth/register', data)
+  return res.data
+}
+
+/** Fetch the current authenticated user profile. */
 export async function getMe(): Promise<UserProfile> {
   const res = await api.get<UserProfile>('/auth/me')
   return res.data
 }
 
+// ── Admin API calls ────────────────────────────────────────────────────────
+
+/** Admin dashboard summary statistics. */
+export async function fetchAdminStats(): Promise<AdminStats> {
+  const res = await api.get<AdminStats>('/admin/stats')
+  return res.data
+}
+
+/** List users with optional role filter. */
+export async function fetchUsers(params?: { role?: string; skip?: number; limit?: number }): Promise<UserProfile[]> {
+  const res = await api.get<UserProfile[]>('/admin/users', { params })
+  return res.data
+}
+
+/** Get a single user by ID. */
+export async function fetchUser(id: number): Promise<UserProfile> {
+  const res = await api.get<UserProfile>(`/admin/users/${id}`)
+  return res.data
+}
+
+/** Create a teacher account (admin only). */
+export async function createTeacher(data: TeacherCreatePayload): Promise<UserProfile> {
+  const res = await api.post<UserProfile>('/admin/users/teacher', data)
+  return res.data
+}
+
+/** Update user profile fields (admin only). */
+export async function updateUser(id: number, data: AdminUserUpdatePayload): Promise<UserProfile> {
+  const res = await api.patch<UserProfile>(`/admin/users/${id}`, data)
+  return res.data
+}
+
 // ── Experiments API calls ──────────────────────────────────────────────────
+
+/** List experiments (respects role-based visibility). */
 export async function fetchExperiments(skip = 0, limit = 20): Promise<Experiment[]> {
   const res = await api.get<Experiment[]>('/experiments/', { params: { skip, limit } })
   return res.data
 }
 
+/** Get a single experiment. */
 export async function fetchExperiment(id: number): Promise<Experiment> {
   const res = await api.get<Experiment>(`/experiments/${id}`)
   return res.data
 }
 
+/** Create a new experiment. */
+export async function createExperiment(data: ExperimentCreatePayload): Promise<Experiment> {
+  const res = await api.post<Experiment>('/experiments/', data)
+  return res.data
+}
+
+/** Update an existing experiment. */
+export async function updateExperiment(id: number, data: Partial<ExperimentCreatePayload>): Promise<Experiment> {
+  const res = await api.patch<Experiment>(`/experiments/${id}`, data)
+  return res.data
+}
+
+/** Delete an experiment (admin only). */
+export async function deleteExperiment(id: number): Promise<void> {
+  await api.delete(`/experiments/${id}`)
+}
+
 // ── Submissions API calls ──────────────────────────────────────────────────
+
+/** Fetch the current student's submissions. */
 export async function fetchMySubmissions(): Promise<Submission[]> {
   const res = await api.get<Submission[]>('/submissions/me')
   return res.data
 }
 
+/** Submit observations for an experiment. */
 export async function createSubmission(
   experimentId: number,
   observations: Record<string, unknown>,
@@ -151,11 +268,13 @@ export async function createSubmission(
   return res.data
 }
 
+/** Fetch submissions for a specific experiment (teacher/admin). */
 export async function fetchSubmissionsForExperiment(experimentId: number): Promise<Submission[]> {
   const res = await api.get<Submission[]>(`/submissions/experiment/${experimentId}`)
   return res.data
 }
 
+/** Grade a submission (teacher/admin). */
 export async function gradeSubmission(
   submissionId: number,
   feedback: string,
