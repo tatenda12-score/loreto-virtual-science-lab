@@ -157,6 +157,22 @@ async def health_check_db() -> dict:
         )
 
 
+@app.post(
+    "/setup/seed",
+    tags=["System"],
+    summary="Initialize / Seed Database",
+    description="Seeds default admin, teacher, and experiments idempotently.",
+)
+def setup_seed():
+    try:
+        from scripts.seed import run_seed
+        run_seed()
+        return {"status": "ok", "message": "Database seeded successfully. Admin credentials: admin@loreto.edu.ng / Demo123!"}
+    except Exception as exc:
+        logger.error(f"Setup seed failed: {exc}")
+        return JSONResponse(status_code=500, content={"status": "error", "detail": str(exc)})
+
+
 # ---------------------------------------------------------------------------
 # API versioned routers
 # ---------------------------------------------------------------------------
