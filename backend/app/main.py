@@ -71,10 +71,17 @@ app = FastAPI(
 
 
 # ---------------------------------------------------------------------------
-# Middleware
+# Middleware (Outer to Inner: CORS wraps TrustedHost)
 # ---------------------------------------------------------------------------
 
-# 1. CORS — allow front-end origins defined in .env
+# 1. Trusted host — prevents Host-header injection attacks
+if not settings.is_development and settings.ALLOWED_HOSTS and "*" not in settings.ALLOWED_HOSTS:
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=settings.ALLOWED_HOSTS,
+    )
+
+# 2. CORS — allow front-end origins defined in .env (outer layer to handle OPTIONS preflight)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -82,13 +89,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# 2. Trusted host — prevents Host-header injection attacks
-if not settings.is_development and settings.ALLOWED_HOSTS and "*" not in settings.ALLOWED_HOSTS:
-    app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=settings.ALLOWED_HOSTS,
-    )
 
 
 # ---------------------------------------------------------------------------
