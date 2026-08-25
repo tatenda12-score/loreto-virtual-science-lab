@@ -73,8 +73,17 @@ class Settings(BaseSettings):
                     pass
             return [item.strip() for item in v_clean.split(",") if item.strip()]
         if isinstance(v, list):
-            return v
+            return [str(item).strip() for item in v if str(item).strip()]
         return []
+
+    @field_validator("ALLOWED_HOSTS", mode="after")
+    @classmethod
+    def ensure_render_hosts_included(cls, v: list[str]) -> list[str]:
+        # Always allow onrender.com hostnames in production so Render healthchecks/proxies pass
+        hosts = list(v)
+        if not any("onrender.com" in h for h in hosts):
+            hosts.extend(["loreto-virtual-science-lab.onrender.com", "*.onrender.com"])
+        return hosts
 
     @model_validator(mode="after")
     def validate_production_configuration(self) -> "Settings":
