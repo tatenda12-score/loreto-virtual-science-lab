@@ -142,11 +142,14 @@ def login_cookie(
 
     access_token = create_access_token(data={"sub": user.email})
     
+    # Starlette requires secure=True when samesite='none'
+    is_secure = True if settings.COOKIE_SAMESITE.lower() == "none" else settings.COOKIE_SECURE
+
     response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",
         httponly=True,
-        secure=settings.COOKIE_SECURE,
+        secure=is_secure,
         samesite=settings.COOKIE_SAMESITE,
         domain=settings.COOKIE_DOMAIN,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
@@ -159,11 +162,12 @@ def login_cookie(
     description="Clears the HttpOnly authentication cookie.",
 )
 def logout(response: Response):
+    is_secure = True if settings.COOKIE_SAMESITE.lower() == "none" else settings.COOKIE_SECURE
     response.delete_cookie(
         key="access_token",
         domain=settings.COOKIE_DOMAIN,
         samesite=settings.COOKIE_SAMESITE,
-        secure=settings.COOKIE_SECURE,
+        secure=is_secure,
     )
     return {"detail": "Successfully logged out"}
 
