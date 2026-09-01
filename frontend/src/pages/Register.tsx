@@ -102,9 +102,6 @@ export default function Register() {
       <div className="absolute inset-0 bg-slate-950/80 mix-blend-multiply" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950/90" />
 
-      {/* ── Animated gradient orbs ── */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none mix-blend-screen">
-
       {/* ── Register card ── */}
       <div className="relative z-10 w-full max-w-md mx-4">
         {success ? (
