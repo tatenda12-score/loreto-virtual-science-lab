@@ -15,14 +15,19 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { createSubmission } from '@/services/api'
+import { createSubmission, type Experiment } from '@/services/api'
 
 // ── Types ────────────────────────────────────────────────────────────────────
-interface Props {
+interface SimulationProps {
+  experiment: Experiment
+  onClose: () => void
+  onSuccess: (score: number | null) => void
+}
+
+interface WorkspaceProps {
   experimentId: number
   onSubmitSuccess: (score: number | null) => void
 }
-
 // ── Constants ─────────────────────────────────────────────────────────────────
 const MIN_VOLTAGE    = 1
 const MAX_VOLTAGE    = 24
@@ -190,9 +195,9 @@ function DigitalDisplay({ value, unit }: { value: string; unit: string }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Main Simulation Component
+// Main Component
 // ═══════════════════════════════════════════════════════════════════════════════
-export default function OhmsLawSimulation({ experimentId, onSubmitSuccess }: Props) {
+function OhmsLawWorkspace({ experimentId, onSubmitSuccess }: WorkspaceProps) {
   const [voltage,      setVoltage]      = useState(12)
   const [resistance,   setResistance]   = useState(4)
   const [studentInput, setStudentInput] = useState('')
@@ -227,7 +232,7 @@ export default function OhmsLawSimulation({ experimentId, onSubmitSuccess }: Pro
       }
       const result = await createSubmission(experimentId, obs)
       setSubmitted(true)
-      onSubmitSuccess(result.calculated_score)
+      onSubmitSuccess(result.automatic_score)
     } catch {
       setSubmitError('Submission failed. Please check your connection and try again.')
     } finally {
@@ -440,6 +445,48 @@ export default function OhmsLawSimulation({ experimentId, onSubmitSuccess }: Pro
             </button>
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Modal Wrapper ─────────────────────────────────────────────────────────────
+export default function OhmsLawSimulation({ experiment, onClose, onSuccess }: SimulationProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col"
+         style={{ background: 'rgba(2,6,23,0.95)', backdropFilter: 'blur(16px)' }}>
+      {/* Modal header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm"
+               style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>⚡</div>
+          <div>
+            <h2 className="text-base font-bold text-white">{experiment.title}</h2>
+            <p className="text-xs text-slate-400">{experiment.subject} · {experiment.difficulty} · Interactive Simulation</p>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="rounded-lg px-3 py-1.5 border border-white/10 text-slate-300 hover:bg-white/5 transition-colors text-sm"
+        >
+          ✕ Close
+        </button>
+      </div>
+
+      {/* Simulation workspace */}
+      <div className="flex-1 overflow-y-auto p-6">
+        {/* Instructions banner */}
+        <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 px-4 py-3 mb-5">
+          <p className="text-xs text-violet-300 font-medium mb-1">📋 Lab Instructions</p>
+          <p className="text-xs text-slate-400">{experiment.description}</p>
+        </div>
+
+        <OhmsLawWorkspace
+          experimentId={experiment.id}
+          onSubmitSuccess={(score) => {
+            onSuccess(score)
+          }}
+        />
       </div>
     </div>
   )

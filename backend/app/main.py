@@ -63,18 +63,30 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------------------------
 # FastAPI application instance
 # ---------------------------------------------------------------------------
-app = FastAPI(
-    title=settings.APP_TITLE,
-    version=settings.APP_VERSION,
-    description=(
+app_kwargs = {
+    "title": settings.APP_TITLE,
+    "version": settings.APP_VERSION,
+    "description": (
         "Backend API for the Loreto High School Virtual Science Laboratory System. "
         "Supports admin, teacher, and student roles with full experiment tracking."
     ),
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json",
-    lifespan=lifespan,
-)
+    "lifespan": lifespan,
+}
+
+if settings.DISABLE_DOCS:
+    app_kwargs.update({
+        "docs_url": None,
+        "redoc_url": None,
+        "openapi_url": None,
+    })
+else:
+    app_kwargs.update({
+        "docs_url": "/docs",
+        "redoc_url": "/redoc",
+        "openapi_url": "/openapi.json",
+    })
+
+app = FastAPI(**app_kwargs)
 
 
 # ---------------------------------------------------------------------------
@@ -88,7 +100,16 @@ if not settings.is_development and settings.ALLOWED_HOSTS and "*" not in setting
         allowed_hosts=settings.ALLOWED_HOSTS,
     )
 
-# 2. CORS — allow front-end origins defined in .env (outer layer to handle OPTIONS preflight)
+# 2. Security Headers Middleware
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
+# 3. CORS — allow front-end origins defined in .env (outer layer to handle OPTIONS preflight)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,

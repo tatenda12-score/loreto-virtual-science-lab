@@ -23,6 +23,9 @@ from app.schemas.admin_schema import (
     TeacherCreate,
 )
 from app.schemas.user_schema import UserResponse
+from app.schemas.audit_schema import AuditLogResponse
+from app.models.audit import AuditLog
+from app.services.audit_service import log_action
 
 router = APIRouter()
 
@@ -151,8 +154,15 @@ def create_teacher(
         is_verified=True,               # Admin-created teachers are pre-verified
     )
     db.add(new_teacher)
+    
+    # Log the action
+    log_action(db, _current_user.id, "teacher_created", "User", None, {"email": payload.email, "subject_code": payload.subject_code})
+
     db.flush()
     db.refresh(new_teacher)
+    
+    # Update log with the new ID
+    log_action(db, _current_user.id, "teacher_created_complete", "User", str(new_teacher.id), {"email": payload.email})
     return UserResponse.model_validate(new_teacher)
 
 
@@ -194,6 +204,28 @@ def update_user(
     for field, value in update_data.items():
         setattr(user, field, value)
 
+    log_action(db, _current_user.id, "user_updated", "User", str(user.id), update_data)
+
     db.flush()
     db.refresh(user)
     return UserResponse.model_validate(user)
+
+# ---------------------------------------------------------------------------
+# GET /admin/audit-logs — view audit history
+# ---------------------------------------------------------------------------
+@router.get("/audit-logs", response_model=list[AuditLogResponse])
+def get_audit_logs(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
+    db: Session = Depends(get_db),
+    _current_user: User = _admin_dep,
+) -> list[AuditLogResponse]:
+    """View the system audit log."""
+    logs = (
+        db.query(AuditLog)
+        .order_by(AuditLog.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return [AuditLogResponse.model_validate(log) for log in logs]

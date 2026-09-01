@@ -23,7 +23,7 @@ Usage example
 
 from typing import Callable
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
@@ -45,11 +45,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 # ---------------------------------------------------------------------------
 
 def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    request: Request,
     db: Session = Depends(get_db),
 ) -> User:
     """
-    Validate the bearer token and return the authenticated User object.
+    Validate the bearer token from the `access_token` cookie (preferred) or Authorization header,
+    and return the authenticated User object.
 
     Raises
     ------
@@ -62,6 +63,18 @@ def get_current_user(
         detail="Could not validate credentials.",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    token = request.cookies.get("access_token")
+    if not token:
+        authorization = request.headers.get("Authorization")
+        if authorization and authorization.startswith("Bearer "):
+            token = authorization.split(" ")[1]
+        else:
+            raise credentials_exception
+    else:
+        # If it comes from cookie, it might have "Bearer " prefix if we saved it that way
+        if token.startswith("Bearer "):
+            token = token.split(" ")[1]
 
     try:
         payload = decode_access_token(token)

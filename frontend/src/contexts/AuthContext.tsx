@@ -15,11 +15,11 @@ import {
 } from 'react'
 
 import {
-  clearToken,
+  setLoginState,
   getMe,
   isLoggedIn,
   loginUser,
-  saveToken,
+  logoutUser,
   type UserProfile,
 } from '@/services/api'
 
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isLoggedIn()) {
       getMe()
         .then(setUser)
-        .catch(() => { clearToken(); setUser(null) })
+        .catch(() => { setLoginState(false); setUser(null) })
         .finally(() => setLoading(false))
     } else {
       setLoading(false)
@@ -51,17 +51,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = useCallback(async (email: string, password: string): Promise<UserProfile> => {
-    const token = await loginUser(email, password)
-    saveToken(token)
+    await loginUser(email, password)
+    setLoginState(true)
     const profile = await getMe()
     setUser(profile)
     return profile
   }, [])
 
-  const logout = useCallback(() => {
-    clearToken()
-    setUser(null)
-    window.location.href = '/login'
+  const logout = useCallback(async () => {
+    try {
+      await logoutUser()
+    } catch (err) {
+      console.error("Logout error", err)
+    } finally {
+      setLoginState(false)
+      setUser(null)
+      window.location.href = '/login'
+    }
   }, [])
 
   return (

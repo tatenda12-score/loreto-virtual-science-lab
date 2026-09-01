@@ -22,15 +22,12 @@ const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
   timeout: 15_000,
+  withCredentials: true, // Send HttpOnly cookies with every request
 })
 
-// ── Request interceptor — attach JWT ──────────────────────────────────────
+// ── Request interceptor ───────────────────────────────────────────────────
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem(TOKEN_KEY)
-    if (token && config.headers) {
-      config.headers['Authorization'] = `Bearer ${token}`
-    }
     return config
   },
   (error: AxiosError) => Promise.reject(error),
@@ -41,8 +38,8 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid — clear storage and redirect to login
-      localStorage.removeItem(TOKEN_KEY)
+      // Token expired or invalid — clear state and redirect to login
+      localStorage.removeItem('is_logged_in')
       if (window.location.pathname !== '/login') {
         window.location.href = '/login'
       }
@@ -52,10 +49,11 @@ api.interceptors.response.use(
 )
 
 // ── Token helpers ──────────────────────────────────────────────────────────
-export const saveToken  = (token: string) => localStorage.setItem(TOKEN_KEY, token)
-export const clearToken = ()              => localStorage.removeItem(TOKEN_KEY)
-export const getToken   = ()              => localStorage.getItem(TOKEN_KEY)
-export const isLoggedIn = ()              => Boolean(getToken())
+export const setLoginState  = (state: boolean) => {
+  if (state) localStorage.setItem('is_logged_in', 'true');
+  else localStorage.removeItem('is_logged_in');
+}
+export const isLoggedIn = () => Boolean(localStorage.getItem('is_logged_in'))
 
 // ── API helper types ───────────────────────────────────────────────────────
 export interface LoginPayload  { username: string; password: string }
@@ -118,7 +116,7 @@ export interface ExperimentCreatePayload {
   description:      string
   subject:          'Physics' | 'Chemistry' | 'Biology'
   difficulty?:      'Beginner' | 'Intermediate' | 'Advanced'
-  simulation_type?: 'ohms_law' | 'titration' | 'velocity' | 'ph' | 'generic'
+  simulation_type?: 'ohms_law' | 'titration' | 'velocity' | 'ph' | 'microscopy' | 'generic'
   status?:          'draft' | 'published' | 'archived'
   topic?:           string
   materials?:       string[] | Record<string, unknown>
@@ -131,7 +129,7 @@ export interface Experiment {
   title:           string
   subject:         'Physics' | 'Chemistry' | 'Biology'
   difficulty:      'Beginner' | 'Intermediate' | 'Advanced'
-  simulation_type: 'ohms_law' | 'titration' | 'velocity' | 'ph' | 'generic'
+  simulation_type: 'ohms_law' | 'titration' | 'velocity' | 'ph' | 'microscopy' | 'generic'
   status:          'draft' | 'published' | 'archived'
   topic:           string | null
   description:     string
@@ -148,7 +146,10 @@ export interface Submission {
   student_id:            number
   experiment_id:         number
   recorded_observations: Record<string, unknown> | null
-  calculated_score:      number | null
+  automatic_score:       number | null
+  final_score:           number | null
+  graded_by_id:          number | null
+  graded_at:             string | null
   teacher_feedback:      string | null
   status:                'draft' | 'submitted' | 'graded'
   submitted_at:          string | null
@@ -156,21 +157,34 @@ export interface Submission {
   updated_at:            string
 }
 
+export interface AuditLog {
+  id:               number
+  user_id:          number | null
+  action:           string
+  entity_type:      string | null
+  entity_id:        string | null
+  metadata_payload: Record<string, unknown> | null
+  created_at:       string
+}
+
 // ── Auth API calls ─────────────────────────────────────────────────────────
 /**
  * Login with email + password (OAuth2 form).
  * Returns the JWT token string on success.
  */
-export async function loginUser(email: string, password: string): Promise<string> {
+export async function loginUser(email: string, password: string): Promise<void> {
   // FastAPI OAuth2PasswordRequestForm expects form-encoded data
   const params = new URLSearchParams()
   params.append('username', email)
   params.append('password', password)
 
-  const res = await api.post<TokenResponse>('/auth/login', params, {
+  await api.post<TokenResponse>('/auth/login/cookie', params, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   })
-  return res.data.access_token
+}
+
+export async function logoutUser(): Promise<void> {
+  await api.post('/auth/logout')
 }
 
 /** Register a new student account. */
@@ -219,33 +233,46 @@ export async function updateUser(id: number, data: AdminUserUpdatePayload): Prom
 
 // ── Experiments API calls ──────────────────────────────────────────────────
 
-/** List experiments (respects role-based visibility). */
-export async function fetchExperiments(skip = 0, limit = 20): Promise<Experiment[]> {
-  const res = await api.get<Experiment[]>('/experiments/', { params: { skip, limit } })
-  return res.data
-}
+// ── Experiments API ────────────────────────────────────────────────────────
 
-/** Get a single experiment. */
 export async function fetchExperiment(id: number): Promise<Experiment> {
   const res = await api.get<Experiment>(`/experiments/${id}`)
   return res.data
 }
 
-/** Create a new experiment. */
+export async function fetchExperiments(statusFilter?: string): Promise<Experiment[]> {
+  const params = statusFilter ? { status: statusFilter } : undefined
+  const res = await api.get<Experiment[]>('/experiments/', { params })
+  return res.data
+}
+
 export async function createExperiment(data: ExperimentCreatePayload): Promise<Experiment> {
   const res = await api.post<Experiment>('/experiments/', data)
   return res.data
 }
 
-/** Update an existing experiment. */
 export async function updateExperiment(id: number, data: Partial<ExperimentCreatePayload>): Promise<Experiment> {
   const res = await api.patch<Experiment>(`/experiments/${id}`, data)
   return res.data
 }
 
-/** Delete an experiment (admin only). */
 export async function deleteExperiment(id: number): Promise<void> {
   await api.delete(`/experiments/${id}`)
+}
+
+export async function publishExperiment(id: number): Promise<Experiment> {
+  const res = await api.post<Experiment>(`/experiments/${id}/publish`)
+  return res.data
+}
+
+export async function archiveExperiment(id: number): Promise<Experiment> {
+  const res = await api.post<Experiment>(`/experiments/${id}/archive`)
+  return res.data
+}
+
+export async function duplicateExperiment(id: number): Promise<Experiment> {
+  const res = await api.post<Experiment>(`/experiments/${id}/duplicate`)
+  return res.data
 }
 
 // ── Submissions API calls ──────────────────────────────────────────────────
@@ -276,13 +303,22 @@ export async function fetchSubmissionsForExperiment(experimentId: number): Promi
 
 /** Grade a submission (teacher/admin). */
 export async function gradeSubmission(
-  submissionId: number,
-  feedback: string,
-  score?: number,
+  id: number,
+  feedback?: string,
+  score?: number
 ): Promise<Submission> {
-  const res = await api.patch<Submission>(`/submissions/${submissionId}/grade`, {
-    teacher_feedback: feedback,
-    ...(score !== undefined && { calculated_score: score }),
+  const res = await api.patch<Submission>(`/submissions/${id}/grade`, {
+    ...(feedback !== undefined && { teacher_feedback: feedback }),
+    ...(score !== undefined && { final_score: score }),
+  })
+  return res.data
+}
+
+// ── Admin Logs ────────────────────────────────────────────────────────────
+
+export async function fetchAuditLogs(skip = 0, limit = 50): Promise<AuditLog[]> {
+  const res = await api.get<AuditLog[]>('/admin/audit-logs', {
+    params: { skip, limit }
   })
   return res.data
 }

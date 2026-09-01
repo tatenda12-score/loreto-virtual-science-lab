@@ -27,21 +27,21 @@ import {
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 const SUBJECT_BADGE: Record<string, string> = {
-  Physics:   'bg-violet-500/20 text-violet-300 border-violet-500/30',
-  Chemistry: 'bg-cyan-500/20   text-cyan-300   border-cyan-500/30',
-  Biology:   'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+  Physics:   'bg-violet-50 text-violet-700 border-violet-200',
+  Chemistry: 'bg-cyan-50   text-cyan-700   border-cyan-200',
+  Biology:   'bg-emerald-50 text-emerald-700 border-emerald-200',
 }
 
 const SUB_STATUS_BADGE: Record<string, { label: string; cls: string }> = {
-  draft:     { label: 'Draft',     cls: 'bg-slate-500/20 text-slate-300 border-slate-500/30' },
-  submitted: { label: 'Pending',   cls: 'bg-amber-500/20  text-amber-300  border-amber-500/30' },
-  graded:    { label: 'Graded',    cls: 'bg-green-500/20  text-green-300  border-green-500/30' },
+  draft:     { label: 'Draft',     cls: 'bg-slate-100 text-slate-700 border-slate-200' },
+  submitted: { label: 'Pending',   cls: 'bg-amber-50  text-amber-700  border-amber-200' },
+  graded:    { label: 'Graded',    cls: 'bg-green-50  text-green-700  border-green-200' },
 }
 
 const EXP_STATUS_BADGE: Record<string, { label: string; cls: string }> = {
-  draft:     { label: 'Draft',     cls: 'bg-slate-500/20 text-slate-300 border-slate-500/30' },
-  published: { label: 'Published', cls: 'bg-green-500/20  text-green-300  border-green-500/30' },
-  archived:  { label: 'Archived',  cls: 'bg-amber-500/20  text-amber-300  border-amber-500/30' },
+  draft:     { label: 'Draft',     cls: 'bg-slate-100 text-slate-700 border-slate-200' },
+  published: { label: 'Published', cls: 'bg-green-50  text-green-700  border-green-200' },
+  archived:  { label: 'Archived',  cls: 'bg-amber-50  text-amber-700  border-amber-200' },
 }
 
 type TabType = 'experiments' | 'submissions'
@@ -84,7 +84,7 @@ export default function TeacherDashboard() {
 
   function refreshExperiments() {
     setLoadingExp(true)
-    fetchExperiments(0, 100)
+    fetchExperiments()
       .then(setExperiments)
       .finally(() => setLoadingExp(false))
   }
@@ -161,14 +161,13 @@ export default function TeacherDashboard() {
   // ── Experiment Builder overlay ──────────────────────────────────────────
   if (showBuilder) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white">
-        <nav className="border-b border-white/5 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+      <div className="min-h-screen bg-slate-50 text-slate-900">
+        <nav className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm"
-                   style={{ background: 'linear-gradient(135deg, #7c3aed, #0891b2)' }}>🔬</div>
-              <span className="font-semibold text-white">Virtual Science Lab</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30">
+              <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm bg-slate-900 text-white">🔬</div>
+              <span className="font-semibold text-slate-900">Virtual Science Lab</span>
+              <span className="text-xs px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
                 {editingExp ? 'Edit Experiment' : 'New Experiment'}
               </span>
             </div>
@@ -187,25 +186,24 @@ export default function TeacherDashboard() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
 
       {/* ── Top nav ── */}
-      <nav className="border-b border-white/5 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+      <nav className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm"
-                 style={{ background: 'linear-gradient(135deg, #7c3aed, #0891b2)' }}>🔬</div>
-            <span className="font-semibold text-white">Virtual Science Lab</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30">
+            <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm bg-slate-900 text-white">🔬</div>
+            <span className="font-semibold text-slate-900">Virtual Science Lab</span>
+            <span className="text-xs px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
               Teacher
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-400 hidden sm:block">{user?.full_name}</span>
+            <span className="text-sm text-slate-600 hidden sm:block">{user?.full_name}</span>
             <button
               id="teacher-logout"
               onClick={logout}
-              className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 hover:bg-white/5 transition-colors"
+              className="text-xs px-3 py-1.5 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
             >
               Sign out
             </button>
@@ -216,52 +214,50 @@ export default function TeacherDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full flex-1 flex flex-col gap-8">
 
         {/* ── Welcome ── */}
-        <div className="rounded-2xl p-6 relative overflow-hidden"
-             style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #0c1445 50%, #041822 100%)' }}>
-          <div className="absolute inset-0 opacity-20"
-               style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, #0891b2 0%, transparent 60%)' }} />
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="rounded-xl p-6 bg-white border border-slate-200 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
             <div>
-              <h1 className="text-2xl font-bold text-white">Teacher Dashboard</h1>
-              <p className="text-slate-400 text-sm mt-0.5">
+              <p className="text-slate-500 text-sm mb-1">Teacher Dashboard</p>
+              <h1 className="text-2xl font-bold text-slate-900">{user?.full_name ?? 'Teacher'}</h1>
+              <p className="text-slate-600 text-sm mt-0.5">
                 {user?.subject_code ? `Subject: ${user.subject_code}` : 'All subjects'}
               </p>
             </div>
-            <div className="flex gap-3">
-              <div className="rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-center min-w-[90px]">
-                <p className="text-2xl font-bold text-white">{experiments.length}</p>
-                <p className="text-xs text-slate-400">Experiments</p>
+            <div className="flex gap-4">
+              <div className="text-center min-w-[90px]">
+                <p className="text-2xl font-bold text-slate-900">{experiments.length}</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mt-0.5">Experiments</p>
               </div>
-              <div className="rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-center min-w-[90px]">
-                <p className="text-2xl font-bold text-amber-400">{pendingCount}</p>
-                <p className="text-xs text-slate-400">To Grade</p>
+              <div className="text-center min-w-[90px]">
+                <p className="text-2xl font-bold text-amber-600">{pendingCount}</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mt-0.5">To Grade</p>
               </div>
-              <div className="rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-center min-w-[90px]">
-                <p className="text-2xl font-bold text-green-400">{gradedCount}</p>
-                <p className="text-xs text-slate-400">Graded</p>
+              <div className="text-center min-w-[90px]">
+                <p className="text-2xl font-bold text-green-600">{gradedCount}</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mt-0.5">Graded</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* ── Tab navigation ── */}
-        <div className="flex items-center gap-4 border-b border-white/5 pb-1">
+        <div className="flex items-center gap-6 border-b border-slate-200 pb-px">
           <button
             onClick={() => setActiveTab('experiments')}
-            className={`text-sm font-medium pb-2 transition-colors border-b-2 ${
+            className={`text-sm font-semibold pb-3 transition-colors border-b-2 ${
               activeTab === 'experiments'
-                ? 'border-violet-500 text-white'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
             }`}
           >
             🧪 My Experiments
           </button>
           <button
             onClick={() => setActiveTab('submissions')}
-            className={`text-sm font-medium pb-2 transition-colors border-b-2 ${
+            className={`text-sm font-semibold pb-3 transition-colors border-b-2 ${
               activeTab === 'submissions'
-                ? 'border-violet-500 text-white'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
             }`}
           >
             📋 Submissions
@@ -280,10 +276,10 @@ export default function TeacherDashboard() {
                   <button
                     key={f}
                     onClick={() => setStatusFilter(f)}
-                    className={`text-xs px-3 py-1.5 rounded-lg border transition-colors capitalize ${
+                    className={`text-xs px-3 py-1.5 rounded-md border transition-colors capitalize font-medium ${
                       statusFilter === f
-                        ? 'border-violet-500/50 bg-violet-500/20 text-violet-300'
-                        : 'border-white/10 text-slate-400 hover:text-white hover:bg-white/5'
+                        ? 'border-blue-200 bg-blue-50 text-blue-700'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
                     {f === 'all' ? `All (${experiments.length})` : `${f} (${experiments.filter(e => e.status === f).length})`}
@@ -292,8 +288,7 @@ export default function TeacherDashboard() {
               </div>
               <button
                 onClick={handleCreateExperiment}
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-white"
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 15px rgba(124,58,237,0.3)' }}
+                className="px-4 py-2 rounded-md text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors"
               >
                 + Create Experiment
               </button>
@@ -302,14 +297,14 @@ export default function TeacherDashboard() {
             {/* Experiments grid */}
             {loadingExp ? (
               <div className="text-center py-12">
-                <div className="w-8 h-8 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin mx-auto mb-3" />
-                <p className="text-slate-400 text-sm">Loading experiments…</p>
+                <div className="w-8 h-8 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin mx-auto mb-3" />
+                <p className="text-slate-500 text-sm">Loading experiments...</p>
               </div>
             ) : filteredExps.length === 0 ? (
-              <div className="rounded-xl border border-white/5 bg-slate-900 p-12 text-center">
+              <div className="rounded-xl border border-slate-200 bg-white p-12 text-center shadow-sm">
                 <p className="text-4xl mb-3">🧪</p>
-                <p className="text-slate-400 text-sm">No experiments found.</p>
-                <button onClick={handleCreateExperiment} className="mt-4 text-sm text-violet-400 hover:text-violet-300">
+                <p className="text-slate-500 text-sm">No experiments found.</p>
+                <button onClick={handleCreateExperiment} className="mt-4 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline">
                   Create your first experiment →
                 </button>
               </div>
@@ -318,45 +313,45 @@ export default function TeacherDashboard() {
                 {filteredExps.map(exp => {
                   const statusBadge = EXP_STATUS_BADGE[exp.status] ?? EXP_STATUS_BADGE.draft
                   return (
-                    <div key={exp.id} className="rounded-xl border border-white/10 bg-slate-900 overflow-hidden hover:border-white/20 transition-colors">
+                    <div key={exp.id} className="rounded-xl border border-slate-200 bg-white overflow-hidden hover:shadow-md transition-shadow flex flex-col">
                       {/* Card header */}
-                      <div className="px-4 py-3 border-b border-white/5">
+                      <div className="px-4 py-3 border-b border-slate-100 flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${SUBJECT_BADGE[exp.subject] ?? ''}`}>
+                          <span className={`text-xs px-2 py-0.5 rounded-md border font-medium ${SUBJECT_BADGE[exp.subject] ?? ''}`}>
                             {exp.subject}
                           </span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${statusBadge.cls}`}>
+                          <span className={`text-xs px-2 py-0.5 rounded-md border font-medium ${statusBadge.cls}`}>
                             {statusBadge.label}
                           </span>
                         </div>
-                        <h3 className="text-sm font-semibold text-white leading-snug">{exp.title}</h3>
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">{exp.description}</p>
+                        <h3 className="text-sm font-bold text-slate-900 leading-snug">{exp.title}</h3>
+                        <p className="text-xs text-slate-600 mt-1 line-clamp-2">{exp.description}</p>
                       </div>
                       {/* Card meta */}
-                      <div className="px-4 py-2 flex items-center gap-2 text-xs text-slate-500">
+                      <div className="px-4 py-2 flex items-center gap-2 text-xs text-slate-500 font-medium">
                         <span>{exp.difficulty}</span>
                         <span>·</span>
                         <span>{exp.simulation_type?.replace('_', ' ') ?? 'generic'}</span>
                         {exp.topic && <><span>·</span><span>{exp.topic}</span></>}
                       </div>
                       {/* Card actions */}
-                      <div className="px-4 py-3 border-t border-white/5 flex flex-wrap gap-2">
+                      <div className="px-4 py-3 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-2 mt-auto">
                         <button
                           onClick={() => handleEditExperiment(exp)}
-                          className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 hover:bg-white/5 transition-colors"
+                          className="text-xs font-semibold px-3 py-1.5 rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 shadow-sm transition-colors"
                         >
                           ✏️ Edit
                         </button>
                         <button
                           onClick={() => loadSubmissions(exp)}
-                          className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 hover:bg-white/5 transition-colors"
+                          className="text-xs font-semibold px-3 py-1.5 rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 shadow-sm transition-colors"
                         >
                           📋 Submissions
                         </button>
                         {exp.status === 'draft' && (
                           <button
                             onClick={() => handleStatusChange(exp, 'published')}
-                            className="text-xs px-3 py-1.5 rounded-lg border border-green-500/30 text-green-400 hover:bg-green-500/10 transition-colors"
+                            className="text-xs font-semibold px-3 py-1.5 rounded-md border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 shadow-sm transition-colors"
                           >
                             ✅ Publish
                           </button>
@@ -364,7 +359,7 @@ export default function TeacherDashboard() {
                         {exp.status === 'published' && (
                           <button
                             onClick={() => handleStatusChange(exp, 'archived')}
-                            className="text-xs px-3 py-1.5 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-colors"
+                            className="text-xs font-semibold px-3 py-1.5 rounded-md border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 shadow-sm transition-colors"
                           >
                             📦 Archive
                           </button>
@@ -372,7 +367,7 @@ export default function TeacherDashboard() {
                         {exp.status === 'archived' && (
                           <button
                             onClick={() => handleStatusChange(exp, 'draft')}
-                            className="text-xs px-3 py-1.5 rounded-lg border border-slate-500/30 text-slate-400 hover:bg-slate-500/10 transition-colors"
+                            className="text-xs font-semibold px-3 py-1.5 rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 shadow-sm transition-colors"
                           >
                             ↩ Restore
                           </button>
@@ -394,7 +389,7 @@ export default function TeacherDashboard() {
 
             {/* ── Experiments selector ── */}
             <div className="lg:w-80 xl:w-96 shrink-0">
-              <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+              <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
                 Select Experiment
               </h2>
               <div className="space-y-2 max-h-[60vh] overflow-y-auto">
@@ -405,17 +400,17 @@ export default function TeacherDashboard() {
                     onClick={() => loadSubmissions(exp)}
                     className={`w-full text-left rounded-xl border p-4 transition-all ${
                       selectedExp?.id === exp.id
-                        ? 'border-violet-500/50 bg-violet-500/10'
-                        : 'border-white/5 bg-slate-900 hover:border-white/15 hover:bg-slate-800'
+                        ? 'border-blue-300 bg-blue-50 shadow-sm'
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${SUBJECT_BADGE[exp.subject] ?? ''}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-md border font-medium ${SUBJECT_BADGE[exp.subject] ?? ''}`}>
                         {exp.subject}
                       </span>
-                      <span className="text-xs text-slate-500">{exp.difficulty}</span>
+                      <span className="text-xs text-slate-500 font-medium">{exp.difficulty}</span>
                     </div>
-                    <p className="text-sm font-medium text-white leading-snug">{exp.title}</p>
+                    <p className="text-sm font-bold text-slate-900 leading-snug">{exp.title}</p>
                   </button>
                 ))}
               </div>
@@ -424,27 +419,27 @@ export default function TeacherDashboard() {
             {/* ── Submissions grading panel ── */}
             <div className="flex-1 min-w-0">
               {!selectedExp ? (
-                <div className="h-full flex items-center justify-center rounded-2xl border border-white/5 bg-slate-900">
+                <div className="h-full flex items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm">
                   <div className="text-center p-8">
                     <div className="text-4xl mb-3">📋</div>
-                    <p className="text-slate-400 text-sm">Select an experiment to view student submissions</p>
+                    <p className="text-slate-500 text-sm font-medium">Select an experiment to view student submissions</p>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-base font-semibold text-white">
-                      Submissions — <span className="text-violet-300">{selectedExp.title}</span>
+                    <h2 className="text-base font-bold text-slate-900">
+                      Submissions — <span className="text-blue-600">{selectedExp.title}</span>
                     </h2>
                     {gradeMsg && (
-                      <span className="text-xs text-green-400">{gradeMsg}</span>
+                      <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-md">{gradeMsg}</span>
                     )}
                   </div>
 
                   {loadingSubs ? (
-                    <p className="text-slate-400 text-sm">Loading submissions…</p>
+                    <p className="text-slate-500 text-sm">Loading submissions...</p>
                   ) : submissions.length === 0 ? (
-                    <div className="rounded-xl border border-white/5 bg-slate-900 p-8 text-center text-slate-500 text-sm">
+                    <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500 text-sm shadow-sm">
                       No submissions yet for this experiment.
                     </div>
                   ) : (
@@ -454,16 +449,16 @@ export default function TeacherDashboard() {
                         const isGrading = gradingId === sub.id
                         return (
                           <div key={sub.id}
-                               className="rounded-xl border border-white/10 bg-slate-900 overflow-hidden">
+                               className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                             {/* Submission header */}
-                            <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+                            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
                               <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-slate-700 text-slate-300">
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-slate-200 text-slate-700">
                                   {String(sub.student_id).slice(-2)}
                                 </div>
                                 <div>
-                                  <p className="text-sm font-medium text-white">Student #{sub.student_id}</p>
-                                  <p className="text-xs text-slate-500">
+                                  <p className="text-sm font-bold text-slate-900">Student #{sub.student_id}</p>
+                                  <p className="text-xs text-slate-500 font-medium">
                                     {sub.submitted_at
                                       ? new Date(sub.submitted_at).toLocaleString()
                                       : 'Not submitted'}
@@ -471,12 +466,12 @@ export default function TeacherDashboard() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${badge.cls}`}>
+                                <span className={`text-xs px-2 py-0.5 rounded-md border font-medium ${badge.cls}`}>
                                   {badge.label}
                                 </span>
-                                {sub.calculated_score !== null && (
-                                  <span className={`text-xs font-mono font-semibold ${sub.calculated_score >= 70 ? 'text-green-400' : 'text-amber-400'}`}>
-                                    {sub.calculated_score}/100
+                                {sub.final_score !== null && (
+                                  <span className={`text-xs font-mono font-bold ${sub.final_score >= 70 ? 'text-green-600' : 'text-amber-600'}`}>
+                                    {sub.final_score}/100
                                   </span>
                                 )}
                               </div>
@@ -484,9 +479,9 @@ export default function TeacherDashboard() {
 
                             {/* Observations */}
                             {sub.recorded_observations && (
-                              <div className="px-4 py-3 border-b border-white/5">
-                                <p className="text-xs text-slate-500 mb-1 font-medium uppercase tracking-wide">Observations</p>
-                                <pre className="text-xs text-slate-300 font-mono bg-slate-800 rounded-lg p-2 overflow-x-auto">
+                              <div className="px-4 py-3 border-b border-slate-100">
+                                <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wide">Observations</p>
+                                <pre className="text-xs text-slate-700 font-mono bg-slate-50 border border-slate-200 rounded-md p-2 overflow-x-auto">
                                   {JSON.stringify(sub.recorded_observations, null, 2)}
                                 </pre>
                               </div>
@@ -494,28 +489,28 @@ export default function TeacherDashboard() {
 
                             {/* Existing feedback */}
                             {sub.teacher_feedback && !isGrading && (
-                              <div className="px-4 py-2 border-b border-white/5">
-                                <p className="text-xs text-slate-500 mb-0.5">Feedback</p>
-                                <p className="text-xs text-slate-300">{sub.teacher_feedback}</p>
+                              <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                                <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wide">Feedback</p>
+                                <p className="text-sm text-slate-700">{sub.teacher_feedback}</p>
                               </div>
                             )}
 
                             {/* Grade inline form */}
                             {isGrading ? (
-                              <div className="px-4 py-3 space-y-3">
+                              <div className="px-4 py-4 space-y-4 bg-blue-50/30">
                                 <div>
-                                  <label className="text-xs text-slate-400 mb-1 block">Feedback</label>
+                                  <label className="text-xs font-bold text-slate-700 mb-1.5 block uppercase tracking-wide">Feedback</label>
                                   <textarea
                                     id={`feedback-${sub.id}`}
                                     rows={2}
                                     value={feedback}
                                     onChange={(e) => setFeedback(e.target.value)}
-                                    placeholder="Write feedback for this student…"
-                                    className="w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500 resize-none"
+                                    placeholder="Write feedback for this student..."
+                                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 resize-none shadow-sm"
                                   />
                                 </div>
                                 <div>
-                                  <label className="text-xs text-slate-400 mb-1 block">
+                                  <label className="text-xs font-bold text-slate-700 mb-1.5 block uppercase tracking-wide">
                                     Override Score (0–100, optional)
                                   </label>
                                   <input
@@ -525,40 +520,39 @@ export default function TeacherDashboard() {
                                     max="100"
                                     value={scoreInput}
                                     onChange={(e) => setScoreInput(e.target.value)}
-                                    placeholder={`Auto: ${sub.calculated_score ?? '—'}`}
-                                    className="w-32 rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-sm text-white placeholder-slate-600 outline-none focus:border-violet-500"
+                                    placeholder={`Auto: ${sub.automatic_score ?? '—'}`}
+                                    className="w-32 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-sm"
                                   />
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex gap-3">
                                   <button
                                     id={`save-grade-${sub.id}`}
                                     onClick={() => handleGrade(sub.id)}
                                     disabled={grading}
-                                    className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-60"
-                                    style={{ background: 'linear-gradient(135deg, #16a34a, #0e7490)' }}
+                                    className="px-4 py-2 rounded-md text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors disabled:opacity-60"
                                   >
-                                    {grading ? 'Saving…' : 'Save Grade'}
+                                    {grading ? 'Saving...' : 'Save Grade'}
                                   </button>
                                   <button
                                     id={`cancel-grade-${sub.id}`}
                                     onClick={() => { setGradingId(null); setFeedback(''); setScoreInput('') }}
-                                    className="px-4 py-1.5 rounded-lg text-xs border border-white/10 text-slate-300 hover:bg-white/5 transition-colors"
+                                    className="px-4 py-2 rounded-md text-xs font-bold border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 shadow-sm transition-colors"
                                   >
                                     Cancel
                                   </button>
                                 </div>
                               </div>
                             ) : (
-                              <div className="px-4 py-2 flex justify-end">
+                              <div className="px-4 py-3 bg-white flex justify-end">
                                 {sub.status !== 'draft' && (
                                   <button
                                     id={`grade-btn-${sub.id}`}
                                     onClick={() => {
                                       setGradingId(sub.id)
                                       setFeedback(sub.teacher_feedback ?? '')
-                                      setScoreInput(sub.calculated_score?.toString() ?? '')
+                                      setScoreInput(sub.final_score?.toString() ?? '')
                                     }}
-                                    className="text-xs px-3 py-1.5 rounded-lg border border-violet-500/30 text-violet-300 hover:bg-violet-500/10 transition-colors"
+                                    className="text-xs font-semibold px-3 py-1.5 rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 shadow-sm transition-colors"
                                   >
                                     {sub.status === 'graded' ? '✏️ Edit Grade' : '📝 Grade'}
                                   </button>

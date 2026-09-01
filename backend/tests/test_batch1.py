@@ -321,7 +321,7 @@ class TestBatch1(unittest.TestCase):
         self.assertEqual(res.status_code, 201)
         data = res.json()
         self.assertEqual(data["status"], "submitted")
-        self.assertEqual(data["calculated_score"], 100.0)
+        self.assertEqual(data["final_score"], 100.0)
         self.assertEqual(data["student_id"], self.student_id)
 
     # -----------------------------------------------------------------------

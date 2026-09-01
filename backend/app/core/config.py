@@ -44,6 +44,26 @@ class Settings(BaseSettings):
     APP_TITLE: str = Field(default="Virtual Science Laboratory System")
     APP_VERSION: str = Field(default="1.0.0")
 
+    # ── Cookie Security ───────────────────────────────────────────────
+    COOKIE_DOMAIN: Union[str, None] = Field(
+        default=None,
+        description="Domain for HttpOnly cookies. Leave None for same-site in dev.",
+    )
+    COOKIE_SECURE: bool = Field(
+        default=False,
+        description="Set to True in production to ensure cookies only send over HTTPS",
+    )
+    COOKIE_SAMESITE: str = Field(
+        default="lax",
+        description="SameSite policy: lax | strict | none",
+    )
+    
+    # ── API Docs ──────────────────────────────────────────────────────
+    DISABLE_DOCS: bool = Field(
+        default=False,
+        description="Set to True in production to disable /docs and /openapi.json",
+    )
+
     # ── CORS ──────────────────────────────────────────────────────────
     ALLOWED_ORIGINS: Union[list[str], str] = Field(
         default=[
@@ -101,6 +121,9 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "A secure SECRET_KEY with at least 32 characters is required when APP_ENV is not 'development'."
                 )
+            
+            if self.DATABASE_URL.startswith("sqlite"):
+                raise ValueError("SQLite cannot be used as the production database.")
         return self
 
     @property

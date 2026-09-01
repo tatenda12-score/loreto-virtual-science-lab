@@ -57,11 +57,11 @@ class SubmissionUpdate(BaseModel):
     """
 
     recorded_observations: Optional[dict[str, Any]] = None
-    calculated_score: Optional[float] = Field(
+    final_score: Optional[float] = Field(
         default=None,
         ge=0.0,
         le=100.0,
-        description="Score between 0 and 100 (inclusive).",
+        description="Teacher override score between 0 and 100 (inclusive).",
     )
     teacher_feedback: Optional[str] = Field(
         default=None,
@@ -73,7 +73,7 @@ class SubmissionUpdate(BaseModel):
         description="Allowed transitions: draft→submitted (student), submitted→graded (teacher).",
     )
 
-    @field_validator("calculated_score")
+    @field_validator("final_score")
     @classmethod
     def score_precision(cls, v: Optional[float]) -> Optional[float]:
         if v is not None:
@@ -91,7 +91,10 @@ class SubmissionResponse(SubmissionBase):
     id: int
     student_id: int
     experiment_id: int
-    calculated_score: Optional[float]
+    automatic_score: Optional[float]
+    final_score: Optional[float]
+    graded_by_id: Optional[int]
+    graded_at: Optional[datetime]
     teacher_feedback: Optional[str]
     status: SubmissionStatus
     submitted_at: Optional[datetime]
@@ -106,7 +109,10 @@ class SubmissionResponse(SubmissionBase):
                 "student_id": 7,
                 "experiment_id": 1,
                 "recorded_observations": {"temperature_c": 22.5, "colour_change": True},
-                "calculated_score": 87.5,
+                "automatic_score": 85.0,
+                "final_score": 87.5,
+                "graded_by_id": 2,
+                "graded_at": "2024-09-02T11:00:00Z",
                 "teacher_feedback": "Good work! Be more precise with temperature readings.",
                 "status": "graded",
                 "submitted_at": "2024-09-02T10:30:00Z",

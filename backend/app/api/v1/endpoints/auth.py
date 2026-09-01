@@ -12,7 +12,7 @@ Routes
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -110,7 +110,63 @@ def login(
 
     access_token = create_access_token(data={"sub": user.email})
 
+    # In a pure cookie-based flow, we wouldn't return the token in the body to prevent JS access.
+    # However, to keep Swagger UI working, we can return it in the body for development.
+    # The frontend is instructed to ignore the body token and rely on the HttpOnly cookie.
     return Token(access_token=access_token, token_type="bearer")
+
+@router.post(
+    "/login/cookie",
+    summary="Login and set HttpOnly Cookie",
+    description="Production login endpoint that sets an HttpOnly cookie.",
+)
+def login_cookie(
+    response: Response,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
+    email = form_data.username.lower().strip()
+    user: User | None = db.query(User).filter(User.email == email).first()
+
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password.",
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account has been deactivated. Contact the administrator.",
+        )
+
+    access_token = create_access_token(data={"sub": user.email})
+    
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        secure=settings.COOKIE_SECURE,
+        samesite=settings.COOKIE_SAMESITE,
+        domain=settings.COOKIE_DOMAIN,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
+    return {"detail": "Successfully logged in"}
+
+@router.post(
+    "/logout",
+    summary="Logout",
+    description="Clears the HttpOnly authentication cookie.",
+)
+def logout(response: Response):
+    response.delete_cookie(
+        key="access_token",
+        domain=settings.COOKIE_DOMAIN,
+        samesite=settings.COOKIE_SAMESITE,
+        secure=settings.COOKIE_SECURE,
+    )
+    return {"detail": "Successfully logged out"}
+
 
 
 # ---------------------------------------------------------------------------

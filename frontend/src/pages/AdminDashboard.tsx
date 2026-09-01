@@ -11,10 +11,12 @@ import {
   createExperiment,
   updateExperiment,
   deleteExperiment,
+  fetchAuditLogs,
   type UserProfile,
   type AdminStats,
   type Experiment,
-  type Submission
+  type Submission,
+  type AuditLog
 } from '@/services/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -33,18 +35,18 @@ import {
 } from 'lucide-react'
 import ExperimentBuilder from '@/components/experiments/ExperimentBuilder'
 
-type TabType = 'overview' | 'teachers' | 'students' | 'experiments' | 'submissions'
+type TabType = 'overview' | 'teachers' | 'students' | 'experiments' | 'submissions' | 'audit_logs'
 
 const SUBJECT_BADGE: Record<string, string> = {
-  Physics:   'bg-violet-500/20 text-violet-300 border-violet-500/30',
-  Chemistry: 'bg-cyan-500/20   text-cyan-300   border-cyan-500/30',
-  Biology:   'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+  Physics:   'bg-violet-50 text-violet-700 border-violet-200',
+  Chemistry: 'bg-cyan-50   text-cyan-700   border-cyan-200',
+  Biology:   'bg-emerald-50 text-emerald-700 border-emerald-200',
 }
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
-  draft:     { label: 'Draft',     cls: 'bg-slate-500/20 text-slate-300 border-slate-500/30' },
-  published: { label: 'Published', cls: 'bg-green-500/20 text-green-300 border-green-500/30' },
-  archived:  { label: 'Archived',  cls: 'bg-amber-500/20 text-amber-300 border-amber-500/30' },
+  draft:     { label: 'Draft',     cls: 'bg-slate-100 text-slate-700 border-slate-200' },
+  published: { label: 'Published', cls: 'bg-green-50 text-green-700 border-green-200' },
+  archived:  { label: 'Archived',  cls: 'bg-amber-50 text-amber-700 border-amber-200' },
 }
 
 export default function AdminDashboard() {
@@ -79,6 +81,10 @@ export default function AdminDashboard() {
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loadingSubmissions, setLoadingSubmissions] = useState(false)
 
+  // Audit Logs State
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
+  const [loadingLogs, setLoadingLogs] = useState(false)
+
   // Auth Guard
   useEffect(() => {
     if (user && user.role !== 'admin') {
@@ -92,6 +98,7 @@ export default function AdminDashboard() {
     else if (activeTab === 'teachers' && teachers.length === 0) loadTeachers()
     else if (activeTab === 'students' && students.length === 0) loadStudents()
     else if (activeTab === 'experiments' && experiments.length === 0) loadExperiments()
+    else if (activeTab === 'audit_logs' && auditLogs.length === 0) loadAuditLogs()
   }, [activeTab])
 
   // --- API Loaders ---
@@ -140,6 +147,18 @@ export default function AdminDashboard() {
       console.error(e)
     } finally {
       setLoadingExperiments(false)
+    }
+  }
+
+  async function loadAuditLogs() {
+    setLoadingLogs(true)
+    try {
+      const data = await fetchAuditLogs()
+      setAuditLogs(data)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoadingLogs(false)
     }
   }
 
@@ -226,13 +245,13 @@ export default function AdminDashboard() {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {statCards.map((s, i) => (
-          <Card key={i} className="bg-white/5 border-white/10 text-white backdrop-blur-sm">
+          <Card key={i} className="bg-white border-slate-200 shadow-sm text-slate-900">
             <CardContent className="p-6 flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-400 font-medium">{s.label}</p>
-                <p className="text-3xl font-bold mt-2">{s.value}</p>
+                <p className="text-sm text-slate-500 font-medium uppercase tracking-wide">{s.label}</p>
+                <p className="text-3xl font-bold mt-2 text-slate-900">{s.value}</p>
               </div>
-              <div className="p-3 rounded-xl bg-slate-900 border border-white/5">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
                 {s.icon}
               </div>
             </CardContent>
@@ -253,24 +272,24 @@ export default function AdminDashboard() {
         </div>
 
         {showCreateTeacher && (
-          <Card className="bg-slate-900 border-white/10">
-            <CardHeader>
-              <CardTitle className="text-lg">Add New Teacher</CardTitle>
+          <Card className="bg-white border-slate-200 shadow-sm">
+            <CardHeader className="border-b border-slate-100 pb-4 mb-4">
+              <CardTitle className="text-lg text-slate-900">Add New Teacher</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCreateTeacher} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input required placeholder="Full Name" className="bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white" value={newTeacher.full_name} onChange={e => setNewTeacher({...newTeacher, full_name: e.target.value})} />
-                <input required type="email" placeholder="Email" className="bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white" value={newTeacher.email} onChange={e => setNewTeacher({...newTeacher, email: e.target.value})} />
-                <input required type="password" placeholder="Password" className="bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white" value={newTeacher.password} onChange={e => setNewTeacher({...newTeacher, password: e.target.value})} />
-                <input required placeholder="Subject Code" className="bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white" value={newTeacher.subject_code} onChange={e => setNewTeacher({...newTeacher, subject_code: e.target.value})} />
-                <select required className="bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white" value={newTeacher.gender} onChange={e => setNewTeacher({...newTeacher, gender: e.target.value})}>
+                <input required placeholder="Full Name" className="bg-white border border-slate-300 rounded-md px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm" value={newTeacher.full_name} onChange={e => setNewTeacher({...newTeacher, full_name: e.target.value})} />
+                <input required type="email" placeholder="Email" className="bg-white border border-slate-300 rounded-md px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm" value={newTeacher.email} onChange={e => setNewTeacher({...newTeacher, email: e.target.value})} />
+                <input required type="password" placeholder="Password" className="bg-white border border-slate-300 rounded-md px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm" value={newTeacher.password} onChange={e => setNewTeacher({...newTeacher, password: e.target.value})} />
+                <input required placeholder="Subject Code" className="bg-white border border-slate-300 rounded-md px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm" value={newTeacher.subject_code} onChange={e => setNewTeacher({...newTeacher, subject_code: e.target.value})} />
+                <select required className="bg-white border border-slate-300 rounded-md px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm" value={newTeacher.gender} onChange={e => setNewTeacher({...newTeacher, gender: e.target.value})}>
                   <option value="">Select Gender</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
                 </select>
-                <div className="flex justify-end gap-3 sm:col-span-2">
-                  <Button type="button" variant="ghost" onClick={() => setShowCreateTeacher(false)}>Cancel</Button>
-                  <Button type="submit">Save Teacher</Button>
+                <div className="flex justify-end gap-3 sm:col-span-2 mt-2">
+                  <Button type="button" variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm" onClick={() => setShowCreateTeacher(false)}>Cancel</Button>
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">Save Teacher</Button>
                 </div>
               </form>
             </CardContent>
@@ -280,16 +299,16 @@ export default function AdminDashboard() {
         {loadingTeachers ? <p className="text-slate-400">Loading teachers...</p> : (
           <div className="grid gap-4">
             {teachers.length === 0 ? <p className="text-slate-500">No teachers found.</p> : teachers.map(t => (
-              <div key={t.id} className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm">
+              <div key={t.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-white shadow-sm">
                 <div>
-                  <p className="font-semibold">{t.full_name}</p>
-                  <p className="text-sm text-slate-400">{t.email} &bull; {t.subject_code}</p>
+                  <p className="font-semibold text-slate-900">{t.full_name}</p>
+                  <p className="text-sm text-slate-500">{t.email} &bull; {t.subject_code}</p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className={`text-xs px-2 py-1 rounded-full border ${t.is_active ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}`}>
+                  <span className={`text-xs px-2 py-1 rounded-md border font-medium ${t.is_active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
                     {t.is_active ? 'Active' : 'Inactive'}
                   </span>
-                  <Button variant="outline" size="sm" onClick={() => handleToggleUserStatus(t.id, t.is_active, 'teacher')}>
+                  <Button variant="outline" size="sm" onClick={() => handleToggleUserStatus(t.id, t.is_active, 'teacher')} className="border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm">
                     {t.is_active ? 'Deactivate' : 'Activate'}
                   </Button>
                 </div>
@@ -308,16 +327,16 @@ export default function AdminDashboard() {
         {loadingStudents ? <p className="text-slate-400">Loading students...</p> : (
           <div className="grid gap-4">
             {students.length === 0 ? <p className="text-slate-500">No students found.</p> : students.map(s => (
-              <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm gap-4">
+              <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-slate-200 bg-white shadow-sm gap-4">
                 <div>
-                  <p className="font-semibold">{s.full_name}</p>
-                  <p className="text-sm text-slate-400">{s.email} &bull; Class: {s.class_level || 'N/A'}</p>
+                  <p className="font-semibold text-slate-900">{s.full_name}</p>
+                  <p className="text-sm text-slate-500">{s.email} &bull; Class: {s.class_level || 'N/A'}</p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className={`text-xs px-2 py-1 rounded-full border ${s.is_active ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}`}>
+                  <span className={`text-xs px-2 py-1 rounded-md border font-medium ${s.is_active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
                     {s.is_active ? 'Active' : 'Inactive'}
                   </span>
-                  <Button variant="outline" size="sm" onClick={() => handleToggleUserStatus(s.id, s.is_active, 'student')}>
+                  <Button variant="outline" size="sm" onClick={() => handleToggleUserStatus(s.id, s.is_active, 'student')} className="border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm">
                     {s.is_active ? 'Deactivate' : 'Activate'}
                   </Button>
                 </div>
@@ -345,12 +364,12 @@ export default function AdminDashboard() {
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex gap-2 p-1 bg-slate-900 rounded-lg border border-white/10">
+          <div className="flex gap-2 p-1 bg-slate-100 rounded-lg border border-slate-200">
             {['All', 'Draft', 'Published', 'Archived'].map(f => (
               <button
                 key={f}
                 onClick={() => setExpFilter(f as any)}
-                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${expFilter === f ? 'bg-white/10 text-white font-medium' : 'text-slate-400 hover:text-slate-300'}`}
+                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${expFilter === f ? 'bg-white text-slate-900 font-medium shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 {f}
               </button>
@@ -364,30 +383,30 @@ export default function AdminDashboard() {
         {loadingExperiments ? <p className="text-slate-400">Loading experiments...</p> : (
           <div className="grid gap-4">
             {filtered.length === 0 ? <p className="text-slate-500">No experiments found.</p> : filtered.map(exp => (
-              <div key={exp.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm gap-4">
+              <div key={exp.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl border border-slate-200 bg-white shadow-sm gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
-                    <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${SUBJECT_BADGE[exp.subject] ?? ''}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-md border font-medium ${SUBJECT_BADGE[exp.subject] ?? ''}`}>
                       {exp.subject}
                     </span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${STATUS_BADGE[exp.status]?.cls ?? ''}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-md border font-medium ${STATUS_BADGE[exp.status]?.cls ?? ''}`}>
                       {STATUS_BADGE[exp.status]?.label ?? exp.status}
                     </span>
-                    <span className="text-xs text-slate-500">{exp.difficulty}</span>
+                    <span className="text-xs text-slate-500 font-medium">{exp.difficulty}</span>
                   </div>
-                  <p className="font-semibold">{exp.title}</p>
+                  <p className="font-bold text-slate-900">{exp.title}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => { setEditingExp(exp); setShowExpBuilder(true) }}>
+                  <Button variant="ghost" size="sm" onClick={() => { setEditingExp(exp); setShowExpBuilder(true) }} className="text-slate-600 hover:text-blue-600 hover:bg-blue-50">
                     <Edit2 className="w-4 h-4 mr-2" /> Edit
                   </Button>
                   {exp.status === 'draft' && (
-                    <Button variant="outline" size="sm" onClick={() => handleExpStatusChange(exp.id, 'published')} className="text-green-400 hover:text-green-300 hover:bg-green-500/10">
+                    <Button variant="outline" size="sm" onClick={() => handleExpStatusChange(exp.id, 'published')} className="text-green-600 border-green-200 hover:text-green-700 hover:bg-green-50 shadow-sm">
                       Publish
                     </Button>
                   )}
                   {exp.status === 'published' && (
-                    <Button variant="outline" size="sm" onClick={() => handleExpStatusChange(exp.id, 'archived')} className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10">
+                    <Button variant="outline" size="sm" onClick={() => handleExpStatusChange(exp.id, 'archived')} className="text-amber-600 border-amber-200 hover:text-amber-700 hover:bg-amber-50 shadow-sm">
                       Archive
                     </Button>
                   )}
@@ -404,9 +423,9 @@ export default function AdminDashboard() {
     return (
       <div className="space-y-6">
         <div className="max-w-md">
-          <label className="block text-sm font-medium text-slate-300 mb-2">Select Experiment</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wide">Select Experiment</label>
           <select
-            className="w-full bg-slate-900 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-violet-500"
+            className="w-full bg-white border border-slate-300 rounded-md px-4 py-2 text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-sm"
             value={selectedExpId}
             onChange={handleExpSelectForSubs}
           >
@@ -417,47 +436,47 @@ export default function AdminDashboard() {
 
         {selectedExpId !== '' && (
           <div className="space-y-4 mt-6">
-            <h3 className="text-lg font-semibold">Submissions</h3>
-            {loadingSubmissions ? <p className="text-slate-400">Loading submissions...</p> : (
+            <h3 className="text-lg font-semibold text-slate-900">Submissions</h3>
+            {loadingSubmissions ? <p className="text-slate-500">Loading submissions...</p> : (
               submissions.length === 0 ? <p className="text-slate-500">No submissions for this experiment yet.</p> : (
                 <div className="grid gap-4">
                   {submissions.map(sub => (
-                    <div key={sub.id} className="rounded-xl border border-white/10 bg-slate-900 p-4">
-                      <div className="flex justify-between items-center mb-3">
+                    <div key={sub.id} className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                      <div className="flex justify-between items-center px-4 py-3 bg-slate-50 border-b border-slate-100">
                         <div className="flex items-center gap-3">
-                           <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold">
+                           <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-700">
                              {String(sub.student_id).slice(-2)}
                            </div>
                            <div>
-                             <p className="font-medium text-sm">Student #{sub.student_id}</p>
-                             <p className="text-xs text-slate-400">{sub.submitted_at ? new Date(sub.submitted_at).toLocaleString() : 'N/A'}</p>
+                             <p className="font-bold text-sm text-slate-900">Student #{sub.student_id}</p>
+                             <p className="text-xs font-medium text-slate-500">{sub.submitted_at ? new Date(sub.submitted_at).toLocaleString() : 'N/A'}</p>
                            </div>
                         </div>
                         <div className="flex items-center gap-2">
-                           <span className="text-xs px-2 py-1 rounded-full border bg-slate-800 border-slate-600 text-slate-300">
+                           <span className="text-xs px-2 py-1 rounded-md border bg-slate-100 border-slate-200 text-slate-700 font-medium capitalize">
                              Status: {sub.status}
                            </span>
-                           {sub.calculated_score !== null && (
-                             <span className={`text-sm font-mono font-bold ${sub.calculated_score >= 70 ? 'text-green-400' : 'text-amber-400'}`}>
-                               {sub.calculated_score}/100
+                           {sub.final_score !== null && (
+                             <span className={`text-sm font-mono font-bold ${sub.final_score >= 70 ? 'text-green-600' : 'text-amber-600'}`}>
+                               {sub.final_score}/100
                              </span>
                            )}
                         </div>
                       </div>
                       
                       {sub.recorded_observations && (
-                        <div className="mb-3">
-                          <p className="text-xs text-slate-500 uppercase font-medium mb-1">Observations</p>
-                          <pre className="text-xs font-mono bg-slate-950 p-2 rounded-lg border border-white/5 overflow-x-auto text-slate-300">
+                        <div className="p-4 border-b border-slate-100">
+                          <p className="text-xs text-slate-500 uppercase font-bold mb-1">Observations</p>
+                          <pre className="text-xs font-mono bg-slate-50 p-2 rounded-md border border-slate-200 overflow-x-auto text-slate-700">
                             {JSON.stringify(sub.recorded_observations, null, 2)}
                           </pre>
                         </div>
                       )}
 
                       {sub.teacher_feedback && (
-                        <div>
-                          <p className="text-xs text-slate-500 uppercase font-medium mb-1">Teacher Feedback</p>
-                          <p className="text-sm text-slate-300 bg-slate-800/50 p-2 rounded-lg border border-white/5">{sub.teacher_feedback}</p>
+                        <div className="p-4 bg-slate-50/50">
+                          <p className="text-xs text-slate-500 uppercase font-bold mb-1">Teacher Feedback</p>
+                          <p className="text-sm text-slate-700">{sub.teacher_feedback}</p>
                         </div>
                       )}
                     </div>
@@ -471,24 +490,63 @@ export default function AdminDashboard() {
     )
   }
 
+  const renderAuditLogs = () => {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-lg font-semibold text-slate-900">Audit Logs</h2>
+        {loadingLogs ? <p className="text-slate-500">Loading logs...</p> : (
+          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 uppercase tracking-wide text-xs">
+                <tr>
+                  <th className="px-4 py-3 font-bold">Timestamp</th>
+                  <th className="px-4 py-3 font-bold">User ID</th>
+                  <th className="px-4 py-3 font-bold">Action</th>
+                  <th className="px-4 py-3 font-bold">Entity</th>
+                  <th className="px-4 py-3 font-bold">Details</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {auditLogs.map(log => (
+                  <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-3 text-slate-700 font-medium">{new Date(log.created_at).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-slate-900">{log.user_id ?? 'System'}</td>
+                    <td className="px-4 py-3 font-bold text-blue-600">{log.action}</td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {log.entity_type} {log.entity_id ? `#${log.entity_id}` : ''}
+                    </td>
+                    <td className="px-4 py-3 text-slate-500 font-mono text-xs max-w-xs truncate">
+                      {log.metadata_payload ? JSON.stringify(log.metadata_payload) : '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-100">
       {/* --- Top Nav --- */}
-      <nav className="border-b border-white/5 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+      <nav className="border-b border-slate-200 bg-white sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm"
-                 style={{ background: 'linear-gradient(135deg, #7c3aed, #0891b2)' }}>🔬</div>
-            <span className="font-semibold text-white">Virtual Science Lab</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm bg-blue-600 text-white font-bold shadow-sm">
+              🔬
+            </div>
+            <span className="font-bold text-slate-900 tracking-tight">Loreto Science Lab</span>
+            <span className="text-xs px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 font-semibold uppercase tracking-wide">
               Admin
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-400 hidden sm:block">{user?.full_name}</span>
+            <span className="text-sm font-semibold text-slate-600 hidden sm:block">{user?.full_name}</span>
             <button
               onClick={logout}
-              className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 hover:bg-white/5 transition-colors"
+              className="text-xs font-semibold px-3 py-1.5 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm transition-colors"
             >
               Sign out
             </button>
@@ -499,20 +557,20 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full flex-1 flex flex-col">
         {/* --- Header & Tabs --- */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-6">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-6 tracking-tight">Admin Dashboard</h1>
           
-          <div className="flex overflow-x-auto pb-2 -mb-2 scrollbar-hide gap-2 border-b border-white/10">
-            {(['overview', 'teachers', 'students', 'experiments', 'submissions'] as TabType[]).map(tab => (
+          <div className="flex overflow-x-auto pb-px scrollbar-hide gap-6 border-b border-slate-200">
+            {(['overview', 'teachers', 'students', 'experiments', 'submissions', 'audit_logs'] as TabType[]).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                className={`text-sm font-semibold pb-3 transition-colors border-b-2 whitespace-nowrap ${
                   activeTab === tab
-                    ? 'border-violet-500 text-violet-400'
-                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-white/20'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                 }`}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab.charAt(0).toUpperCase() + tab.slice(1).replace('_', ' ')}
               </button>
             ))}
           </div>
@@ -525,6 +583,7 @@ export default function AdminDashboard() {
           {activeTab === 'students' && renderStudents()}
           {activeTab === 'experiments' && renderExperiments()}
           {activeTab === 'submissions' && renderSubmissions()}
+          {activeTab === 'audit_logs' && renderAuditLogs()}
         </div>
       </div>
     </div>

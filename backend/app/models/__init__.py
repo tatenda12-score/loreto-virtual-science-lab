@@ -7,12 +7,20 @@ other module that needs to enumerate models) only needs one import:
     from app.models import *   # or explicit imports below
 """
 
-from app.models.user import User, UserRole                       # noqa: F401
-from app.models.experiment import (                              # noqa: F401
-    Difficulty,
-    Experiment,
-    ExperimentStatus,
-    SimulationType,
-    Subject,
-)
-from app.models.submission import Submission, SubmissionStatus   # noqa: F401
+from .user import User, UserRole
+from .experiment import Experiment, ExperimentStatus, SimulationType, Subject, Difficulty
+from .submission import Submission, SubmissionStatus
+from .audit import AuditLog
+
+__all__ = [
+    "User",
+    "UserRole",
+    "Experiment",
+    "ExperimentStatus",
+    "SimulationType",
+    "Subject",
+    "Difficulty",
+    "Submission",
+    "SubmissionStatus",
+    "AuditLog",
+]

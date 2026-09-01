@@ -366,6 +366,10 @@ def _seed_submissions(
 # ===========================================================================
 
 def run_seed() -> None:
+    from app.core.config import settings
+    if settings.APP_ENV.lower() == "production":
+        raise RuntimeError("Seed script is disabled in production to prevent overwriting or creating demo data.")
+
     print("\n========================================")
     print(" Virtual Science Lab — Database Seeder ")
     print("========================================\n")

@@ -20,6 +20,7 @@ from app.api.deps import get_current_active_user, require_roles
 from app.db.database import get_db
 from app.models.experiment import Experiment, ExperimentStatus
 from app.models.user import User, UserRole
+from app.services.audit_service import log_action
 from app.schemas.experiment_schema import (
     ExperimentCreate,
     ExperimentResponse,
@@ -66,6 +67,9 @@ def create_experiment(
     db.add(experiment)
     db.flush()
     db.refresh(experiment)
+    
+    log_action(db, current_user.id, "experiment_created", "Experiment", str(experiment.id), {"title": payload.title})
+    
     return ExperimentTeacherResponse.model_validate(experiment)
 
 
@@ -186,6 +190,9 @@ def update_experiment(
 
     db.flush()
     db.refresh(experiment)
+    
+    log_action(db, current_user.id, "experiment_updated", "Experiment", str(experiment.id), update_data)
+    
     return ExperimentTeacherResponse.model_validate(experiment)
 
 
@@ -211,3 +218,104 @@ def delete_experiment(
             detail=f"Experiment with id={experiment_id} not found.",
         )
     db.delete(experiment)
+    
+    log_action(db, _current_user.id, "experiment_deleted", "Experiment", str(experiment_id))
+
+# ---------------------------------------------------------------------------
+# POST /{experiment_id}/publish  — Publish an experiment
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "/{experiment_id}/publish",
+    response_model=ExperimentTeacherResponse,
+    summary="Publish an experiment",
+)
+def publish_experiment(
+    experiment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.teacher, UserRole.admin)),
+) -> ExperimentTeacherResponse:
+    experiment = db.query(Experiment).filter(Experiment.id == experiment_id).first()
+    if not experiment:
+        raise HTTPException(status_code=404, detail="Experiment not found.")
+    
+    if current_user.role == UserRole.teacher and experiment.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+        
+    if not experiment.parameters or not experiment.instructions:
+        raise HTTPException(status_code=400, detail="Cannot publish incomplete experiment. Missing parameters or instructions.")
+        
+    experiment.status = ExperimentStatus.published
+    db.flush()
+    db.refresh(experiment)
+    
+    log_action(db, current_user.id, "experiment_published", "Experiment", str(experiment.id))
+    return ExperimentTeacherResponse.model_validate(experiment)
+
+# ---------------------------------------------------------------------------
+# POST /{experiment_id}/archive  — Archive an experiment
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "/{experiment_id}/archive",
+    response_model=ExperimentTeacherResponse,
+    summary="Archive an experiment",
+)
+def archive_experiment(
+    experiment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.teacher, UserRole.admin)),
+) -> ExperimentTeacherResponse:
+    experiment = db.query(Experiment).filter(Experiment.id == experiment_id).first()
+    if not experiment:
+        raise HTTPException(status_code=404, detail="Experiment not found.")
+    
+    if current_user.role == UserRole.teacher and experiment.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+        
+    experiment.status = ExperimentStatus.archived
+    db.flush()
+    db.refresh(experiment)
+    
+    log_action(db, current_user.id, "experiment_archived", "Experiment", str(experiment.id))
+    return ExperimentTeacherResponse.model_validate(experiment)
+
+# ---------------------------------------------------------------------------
+# POST /{experiment_id}/duplicate  — Duplicate an experiment
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "/{experiment_id}/duplicate",
+    response_model=ExperimentTeacherResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Duplicate an experiment",
+)
+def duplicate_experiment(
+    experiment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.teacher, UserRole.admin)),
+) -> ExperimentTeacherResponse:
+    experiment = db.query(Experiment).filter(Experiment.id == experiment_id).first()
+    if not experiment:
+        raise HTTPException(status_code=404, detail="Experiment not found.")
+    
+    new_exp = Experiment(
+        title=f"Copy of {experiment.title}",
+        subject=experiment.subject,
+        difficulty=experiment.difficulty,
+        simulation_type=experiment.simulation_type,
+        status=ExperimentStatus.draft, # Duplicates start as draft
+        topic=experiment.topic,
+        description=experiment.description,
+        materials=experiment.materials,
+        instructions=experiment.instructions,
+        parameters=experiment.parameters,
+        created_by=current_user.id,
+    )
+    db.add(new_exp)
+    db.flush()
+    db.refresh(new_exp)
+    
+    log_action(db, current_user.id, "experiment_duplicated", "Experiment", str(new_exp.id), {"original_id": experiment.id})
+    return ExperimentTeacherResponse.model_validate(new_exp)
+

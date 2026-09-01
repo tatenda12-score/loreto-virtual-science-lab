@@ -33,6 +33,7 @@ from app.schemas.submission_schema import (
     SubmissionUpdate,
 )
 from app.services.science_engine import grade_submission
+from app.services.audit_service import log_action
 
 router = APIRouter()
 
@@ -69,31 +70,38 @@ def create_submission(
         )
 
     # ── Auto-grade using the science engine ───────────────────────────
-    calculated_score: float | None = None
+    automatic_score: float | None = None
     observations = payload.recorded_observations or {}
 
     if experiment.parameters and observations:
         try:
-            calculated_score = grade_submission(
+            automatic_score = grade_submission(
                 experiment_parameters=experiment.parameters,
                 recorded_observations=observations,
             )
         except Exception:
             # Grading failure is non-fatal — submission is still saved
-            calculated_score = None
+            automatic_score = None
 
     # ── Persist submission ─────────────────────────────────────────────
     submission = Submission(
         student_id=current_user.id,
         experiment_id=payload.experiment_id,
         recorded_observations=observations,
-        calculated_score=calculated_score,
+        automatic_score=automatic_score,
+        final_score=automatic_score, # Initially final_score matches automatic_score
         status=SubmissionStatus.submitted,
         submitted_at=datetime.now(timezone.utc),
     )
     db.add(submission)
+    
+    log_action(db, current_user.id, "submission_created", "Submission", None, {"experiment_id": payload.experiment_id, "automatic_score": automatic_score})
+
     db.flush()
     db.refresh(submission)
+    
+    # Update audit log with generated ID
+    log_action(db, current_user.id, "submission_created_complete", "Submission", str(submission.id), {"experiment_id": payload.experiment_id})
     return submission  # type: ignore[return-value]
 
 
@@ -147,6 +155,13 @@ def get_submissions_for_experiment(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Experiment with id={experiment_id} not found.",
+        )
+
+    # Teachers can only view submissions for experiments they created
+    if _current_user.role == UserRole.teacher and experiment.created_by != _current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to view submissions for this experiment.",
         )
 
     submissions = (
@@ -221,6 +236,13 @@ def grade_submission_endpoint(
             detail=f"Submission with id={submission_id} not found.",
         )
 
+    # Teachers can only grade submissions for experiments they created
+    if _current_user.role == UserRole.teacher and submission.experiment.created_by != _current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to grade submissions for this experiment.",
+        )
+
     if submission.status == SubmissionStatus.draft:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -233,11 +255,18 @@ def grade_submission_endpoint(
     # Apply only provided fields
     if payload.teacher_feedback is not None:
         submission.teacher_feedback = payload.teacher_feedback
-    if payload.calculated_score is not None:
-        submission.calculated_score = payload.calculated_score
+    if payload.final_score is not None:
+        submission.final_score = payload.final_score
 
     # Always advance status to graded
     submission.status = SubmissionStatus.graded
+    submission.graded_by_id = _current_user.id
+    submission.graded_at = datetime.now(timezone.utc)
+    
+    log_action(db, _current_user.id, "submission_graded", "Submission", str(submission.id), {
+        "final_score": payload.final_score,
+        "has_feedback": bool(payload.teacher_feedback)
+    })
 
     db.flush()
     db.refresh(submission)

@@ -118,7 +118,7 @@ class TestBatch3(unittest.TestCase):
         """E. Production APP_ENV accepts strong 32+ character secrets."""
         strong_key = "a" * 32 + "-production-secure-key-12345"
         s = Settings(
-            DATABASE_URL="sqlite:///./test.db",
+            DATABASE_URL="postgresql:///./test.db",
             APP_ENV="production",
             SECRET_KEY=strong_key,
         )

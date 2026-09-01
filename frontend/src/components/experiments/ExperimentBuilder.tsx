@@ -13,7 +13,7 @@ interface ExperimentBuilderProps {
   onCancel: () => void
 }
 
-type SimulationType = 'ohms_law' | 'titration' | 'velocity' | 'ph' | 'generic'
+type SimulationType = 'ohms_law' | 'titration' | 'velocity' | 'ph' | 'microscopy' | 'generic'
 
 interface MaterialItem {
   id: number
@@ -52,10 +52,16 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
       : [{ id: Date.now(), action: '' }]
   )
 
-  // Advanced Config
-  const [parametersJson, setParametersJson] = useState('{}')
-  const [tolerance, setTolerance] = useState('0.05')
-  const [expectedValuesJson, setExpectedValuesJson] = useState('{}')
+  const [parametersJson, setParametersJson] = useState(experiment?.parameters ? JSON.stringify(experiment.parameters) : '{}')
+  const [tolerance, setTolerance] = useState((experiment?.parameters as any)?.grading_config?.tolerance?.toString() || '0.05')
+  const [expectedValuesJson, setExpectedValuesJson] = useState((experiment?.parameters as any)?.grading_config?.expected_values ? JSON.stringify((experiment?.parameters as any).grading_config.expected_values) : '{}')
+
+  // Dynamic States
+  const [ohmsMaxVoltage, setOhmsMaxVoltage] = useState(24)
+  const [ohmsMaxResistance, setOhmsMaxResistance] = useState(100)
+  const [titrationExpectedMolarity, setTitrationExpectedMolarity] = useState(0.5)
+  const [velocityExpectedVelocity, setVelocityExpectedVelocity] = useState(10)
+  const [phExpectedPh, setPhExpectedPh] = useState(7.0)
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -83,17 +89,24 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
       if (description.length < 10) throw new Error('Description must be at least 10 characters.')
 
       // Validate JSON
-      let params = {}
-      let expected = {}
-      try {
-        params = JSON.parse(parametersJson || '{}')
-      } catch {
-        throw new Error('Invalid JSON in parameters.')
-      }
-      try {
-        expected = JSON.parse(expectedValuesJson || '{}')
-      } catch {
-        throw new Error('Invalid JSON in expected values.')
+      let params: any = {}
+      let expected: any = {}
+
+      if (simulationType === 'generic') {
+        try {
+          params = JSON.parse(parametersJson || '{}')
+          expected = JSON.parse(expectedValuesJson || '{}')
+        } catch {
+          throw new Error('Invalid JSON in parameters or expected values.')
+        }
+      } else if (simulationType === 'ohms_law') {
+        params = { max_voltage: ohmsMaxVoltage, max_resistance: ohmsMaxResistance }
+      } else if (simulationType === 'titration') {
+        expected = { molarity_base: titrationExpectedMolarity }
+      } else if (simulationType === 'velocity') {
+        expected = { velocity_ms: velocityExpectedVelocity }
+      } else if (simulationType === 'ph') {
+        expected = { ph: phExpectedPh }
       }
 
       const gradingConfig = {
@@ -150,10 +163,10 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column: Basic Info */}
         <div className="space-y-6">
-          <Card className="bg-slate-900/50 border-white/10 text-white">
+          <Card className="bg-white border-slate-200 shadow-sm text-slate-900">
             <CardHeader>
               <CardTitle className="text-xl flex items-center gap-2">
-                <FlaskConical className="w-5 h-5 text-lab-violet" />
+                <FlaskConical className="w-5 h-5 text-blue-600" />
                 Basic Details
               </CardTitle>
             </CardHeader>
@@ -165,7 +178,7 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Simple Pendulum"
-                  className="bg-white/5 border-white/10 text-white"
+                  className="bg-white border-slate-300 text-slate-900 shadow-sm focus-visible:ring-blue-600"
                   required
                   minLength={3}
                 />
@@ -178,7 +191,7 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe the objective and overview..."
-                  className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lab-violet min-h-[100px]"
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 min-h-[100px] shadow-sm"
                   required
                   minLength={10}
                 />
@@ -191,7 +204,7 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
                     id="subject"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value as any)}
-                    className="w-full rounded-md border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lab-violet"
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 shadow-sm"
                   >
                     <option value="Physics">Physics</option>
                     <option value="Chemistry">Chemistry</option>
@@ -204,7 +217,7 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
                     id="difficulty"
                     value={difficulty}
                     onChange={(e) => setDifficulty(e.target.value as any)}
-                    className="w-full rounded-md border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lab-violet"
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 shadow-sm"
                   >
                     <option value="Beginner">Beginner</option>
                     <option value="Intermediate">Intermediate</option>
@@ -221,7 +234,7 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
                     placeholder="e.g. Mechanics"
-                    className="bg-white/5 border-white/10 text-white"
+                    className="bg-white border-slate-300 text-slate-900 shadow-sm focus-visible:ring-blue-600"
                   />
                 </div>
                 <div className="space-y-2">
@@ -230,12 +243,13 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
                     id="simulation_type"
                     value={simulationType}
                     onChange={(e) => setSimulationType(e.target.value as any)}
-                    className="w-full rounded-md border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lab-violet"
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 shadow-sm"
                   >
                     <option value="ohms_law">Ohm's Law</option>
                     <option value="titration">Acid-Base Titration</option>
                     <option value="velocity">Velocity & Motion</option>
                     <option value="ph">pH Scale</option>
+                    <option value="microscopy">Virtual Microscopy</option>
                     <option value="generic">Generic Experiment</option>
                   </select>
                 </div>
@@ -243,7 +257,7 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900/50 border-white/10 text-white">
+          <Card className="bg-white border-slate-200 shadow-sm text-slate-900">
             <CardHeader>
               <CardTitle className="text-xl">Status</CardTitle>
             </CardHeader>
@@ -257,7 +271,7 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
                       value={opt}
                       checked={status === opt}
                       onChange={(e) => setStatus(e.target.value as ExperimentCreatePayload['status'])}
-                      className="text-lab-violet focus:ring-lab-violet bg-slate-900 border-white/10"
+                      className="text-blue-600 focus:ring-blue-600 bg-white border-slate-300"
                     />
                     <span className="capitalize">{opt}</span>
                   </label>
@@ -269,7 +283,7 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
 
         {/* Right Column: Dynamic Lists & Config */}
         <div className="space-y-6">
-          <Card className="bg-slate-900/50 border-white/10 text-white">
+          <Card className="bg-white border-slate-200 shadow-sm text-slate-900">
             <CardHeader>
               <CardTitle className="text-xl">Materials</CardTitle>
             </CardHeader>
@@ -281,14 +295,14 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
                     value={m.value}
                     onChange={(e) => updateMaterial(m.id, e.target.value)}
                     placeholder="e.g. 100mL Beaker"
-                    className="bg-white/5 border-white/10 text-white flex-1"
+                    className="bg-white border-slate-300 text-slate-900 flex-1 shadow-sm focus-visible:ring-blue-600"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => removeMaterial(m.id)}
-                    className="text-slate-400 hover:text-red-400 hover:bg-white/5"
+                    className="text-slate-400 hover:text-red-500 hover:bg-red-50"
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -299,7 +313,7 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
                 variant="outline"
                 size="sm"
                 onClick={addMaterial}
-                className="mt-2 border-white/10 bg-white/5 hover:bg-white/10 text-white"
+                className="mt-2 border-slate-300 bg-white hover:bg-slate-50 text-slate-700 shadow-sm"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Material
@@ -307,7 +321,7 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900/50 border-white/10 text-white">
+          <Card className="bg-white border-slate-200 shadow-sm text-slate-900">
             <CardHeader>
               <CardTitle className="text-xl">Instructions</CardTitle>
             </CardHeader>
@@ -319,14 +333,14 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
                     value={inst.action}
                     onChange={(e) => updateInstruction(inst.id, e.target.value)}
                     placeholder="Action to perform..."
-                    className="bg-white/5 border-white/10 text-white flex-1"
+                    className="bg-white border-slate-300 text-slate-900 flex-1 shadow-sm focus-visible:ring-blue-600"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => removeInstruction(inst.id)}
-                    className="text-slate-400 hover:text-red-400 hover:bg-white/5"
+                    className="text-slate-400 hover:text-red-500 hover:bg-red-50"
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -337,7 +351,7 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
                 variant="outline"
                 size="sm"
                 onClick={addInstruction}
-                className="mt-2 border-white/10 bg-white/5 hover:bg-white/10 text-white"
+                className="mt-2 border-slate-300 bg-white hover:bg-slate-50 text-slate-700 shadow-sm"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Step
@@ -345,7 +359,7 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900/50 border-white/10 text-white">
+          <Card className="bg-white border-slate-200 shadow-sm text-slate-900">
             <CardHeader>
               <CardTitle className="text-xl">Advanced & Grading Config</CardTitle>
             </CardHeader>
@@ -360,31 +374,75 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
                   max="1"
                   value={tolerance}
                   onChange={(e) => setTolerance(e.target.value)}
-                  className="bg-white/5 border-white/10 text-white"
+                  className="bg-white border-slate-300 text-slate-900 shadow-sm focus-visible:ring-blue-600"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="expected_values">Expected Values (JSON)</Label>
-                <textarea
-                  id="expected_values"
-                  value={expectedValuesJson}
-                  onChange={(e) => setExpectedValuesJson(e.target.value)}
-                  placeholder='{"current_A": 3.0, "power_W": 36.0}'
-                  className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white font-mono min-h-[80px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lab-violet"
-                />
-              </div>
+              {simulationType === 'ohms_law' && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Max Voltage Constraint (V)</Label>
+                    <Input type="number" value={ohmsMaxVoltage} onChange={e => setOhmsMaxVoltage(Number(e.target.value))} className="bg-white border-slate-300 text-slate-900 shadow-sm focus-visible:ring-blue-600" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Max Resistance Constraint (Ω)</Label>
+                    <Input type="number" value={ohmsMaxResistance} onChange={e => setOhmsMaxResistance(Number(e.target.value))} className="bg-white border-slate-300 text-slate-900 shadow-sm focus-visible:ring-blue-600" />
+                  </div>
+                </>
+              )}
 
-              <div className="space-y-2">
-                <Label htmlFor="parameters">Additional Parameters (JSON)</Label>
-                <textarea
-                  id="parameters"
-                  value={parametersJson}
-                  onChange={(e) => setParametersJson(e.target.value)}
-                  placeholder='{"environment": "vacuum"}'
-                  className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white font-mono min-h-[80px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lab-violet"
-                />
-              </div>
+              {simulationType === 'titration' && (
+                <div className="space-y-2">
+                  <Label>Expected Base Molarity (M)</Label>
+                  <Input type="number" step="0.01" value={titrationExpectedMolarity} onChange={e => setTitrationExpectedMolarity(Number(e.target.value))} className="bg-white border-slate-300 text-slate-900 shadow-sm focus-visible:ring-blue-600" />
+                </div>
+              )}
+
+              {simulationType === 'velocity' && (
+                <div className="space-y-2">
+                  <Label>Expected Velocity (m/s)</Label>
+                  <Input type="number" step="0.01" value={velocityExpectedVelocity} onChange={e => setVelocityExpectedVelocity(Number(e.target.value))} className="bg-white border-slate-300 text-slate-900 shadow-sm focus-visible:ring-blue-600" />
+                </div>
+              )}
+
+              {simulationType === 'ph' && (
+                <div className="space-y-2">
+                  <Label>Expected pH</Label>
+                  <Input type="number" step="0.1" value={phExpectedPh} onChange={e => setPhExpectedPh(Number(e.target.value))} className="bg-white border-slate-300 text-slate-900 shadow-sm focus-visible:ring-blue-600" />
+                </div>
+              )}
+
+              {simulationType === 'microscopy' && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-emerald-700 text-sm">
+                  Virtual Microscopy uses manual qualitative grading. Expected values are not required.
+                </div>
+              )}
+
+              {simulationType === 'generic' && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="expected_values">Expected Values (JSON)</Label>
+                    <textarea
+                      id="expected_values"
+                      value={expectedValuesJson}
+                      onChange={(e) => setExpectedValuesJson(e.target.value)}
+                      placeholder='{"current_A": 3.0, "power_W": 36.0}'
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 font-mono min-h-[80px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 shadow-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="parameters">Additional Parameters (JSON)</Label>
+                    <textarea
+                      id="parameters"
+                      value={parametersJson}
+                      onChange={(e) => setParametersJson(e.target.value)}
+                      placeholder='{"environment": "vacuum"}'
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 font-mono min-h-[80px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 shadow-sm"
+                    />
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -396,14 +454,14 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
           variant="outline"
           onClick={onCancel}
           disabled={loading}
-          className="border-white/10 bg-slate-900 hover:bg-slate-800 text-white"
+          className="border-slate-300 bg-white hover:bg-slate-50 text-slate-700 shadow-sm"
         >
           Cancel
         </Button>
         <Button
           type="submit"
           disabled={loading}
-          className="bg-lab-violet hover:bg-lab-violet/90 text-white min-w-[120px]"
+          className="bg-blue-600 hover:bg-blue-700 text-white min-w-[120px] shadow-sm"
         >
           {loading ? (
             <span className="animate-pulse">Saving...</span>

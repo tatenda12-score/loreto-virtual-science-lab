@@ -227,7 +227,7 @@ class TestBatch2(unittest.TestCase):
             student_id=self.student_id,
             experiment_id=self.published_exp_id,
             recorded_observations={"current_A": 3.0},
-            calculated_score=100.0,
+            final_score=100.0,
             status=SubmissionStatus.submitted,
             submitted_at=datetime.now(timezone.utc),
         )

@@ -13,6 +13,7 @@ from app.main import app
 from app.models.user import User
 from app.models.experiment import Experiment
 from app.models.submission import Submission
+from app.models.audit import AuditLog
 
 # Dedicated test SQLite database file
 TEST_DATABASE_URL = "sqlite:///./test_loreto.db"
@@ -35,6 +36,7 @@ import sqlalchemy as sa
 def clean_test_db():
     init_test_db()
     with test_engine.begin() as conn:
+        conn.execute(sa.text("DELETE FROM audit_logs"))
         conn.execute(sa.text("DELETE FROM submissions"))
         conn.execute(sa.text("DELETE FROM experiments"))
         conn.execute(sa.text("DELETE FROM users"))

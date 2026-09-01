@@ -81,7 +81,6 @@ class TestBatch4WorkflowAndSecurity(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        app.dependency_overrides.clear()
         Base.metadata.drop_all(bind=cls.engine)
 
     def setUp(self):
@@ -562,7 +561,7 @@ class TestBatch4WorkflowAndSecurity(unittest.TestCase):
             },
         )
         self.assertEqual(resp.status_code, 201)
-        score = resp.json()["calculated_score"]
+        score = resp.json()["final_score"]
         self.assertIsNotNone(score)
         self.assertEqual(score, 100.0)
 
@@ -584,7 +583,7 @@ class TestBatch4WorkflowAndSecurity(unittest.TestCase):
         sub = Submission(
             student_id=self.student.id,
             experiment_id=exp.id,
-            calculated_score=95.0,
+            final_score=95.0,
             status=SubmissionStatus.graded,
         )
         self.db.add(sub)
@@ -597,7 +596,7 @@ class TestBatch4WorkflowAndSecurity(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         subs = resp.json()
         self.assertTrue(len(subs) >= 1)
-        self.assertEqual(subs[0]["calculated_score"], 95.0)
+        self.assertEqual(subs[0]["final_score"], 95.0)
 
     def test_U_teacher_and_admin_can_view_submissions(self):
         """U. Teacher and admin can view experiment submissions."""
