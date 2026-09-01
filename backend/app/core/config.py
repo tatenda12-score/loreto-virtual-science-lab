@@ -54,8 +54,8 @@ class Settings(BaseSettings):
         description="Set to True in production to ensure cookies only send over HTTPS",
     )
     COOKIE_SAMESITE: str = Field(
-        default="lax",
-        description="SameSite policy: lax | strict | none",
+        default="none",
+        description="SameSite policy: lax | strict | none. Defaulted to none for cross-domain support (Vercel -> Render).",
     )
     
     # ── API Docs ──────────────────────────────────────────────────────
