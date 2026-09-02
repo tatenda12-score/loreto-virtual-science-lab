@@ -16,7 +16,30 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 
 // ── Constants ──────────────────────────────────────────────────────────────
 export const TOKEN_KEY = 'vsl_access_token'
-export const API_BASE  = (import.meta.env.VITE_API_URL as string | undefined)?.trim() || '/api/v1'
+
+/**
+ * Resolve the API base URL.
+ *
+ * On production (any non-localhost domain), we ALWAYS use the relative
+ * '/api/v1' path. This forces requests through the Vercel rewrite proxy
+ * (vercel.json), which proxies server-side to the Render backend.
+ * The browser never makes a cross-origin request → no CORS preflight → no 400 errors.
+ *
+ * VITE_API_URL is only respected for localhost development (Vite dev proxy or direct backend).
+ */
+function resolveApiBase(): string {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      // PRODUCTION: always use relative path → goes through Vercel rewrite proxy
+      return '/api/v1'
+    }
+  }
+  // DEVELOPMENT: use env var if set, otherwise relative (Vite dev proxy handles it)
+  return (import.meta.env.VITE_API_URL as string | undefined)?.trim() || '/api/v1'
+}
+
+export const API_BASE = resolveApiBase()
 
 // ── Axios instance ─────────────────────────────────────────────────────────
 const api = axios.create({

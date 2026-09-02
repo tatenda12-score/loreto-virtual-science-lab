@@ -112,11 +112,20 @@ async def add_security_headers(request, call_next):
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
-# 3. CORS — allow front-end origins defined in .env (outer layer to handle OPTIONS preflight)
+# 3. CORS — Since we use Bearer JWT tokens (not cookies), allow_credentials
+#    is False, which permits allow_origins=["*"] as a safe catch-all.
+#    The Vercel frontend uses a rewrite proxy so most requests aren't cross-origin,
+#    but this ensures direct API access from any origin also works (mobile, Postman, etc).
+cors_origins = settings.ALLOWED_ORIGINS
+if not cors_origins or cors_origins == ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"]:
+    # No custom origins configured — allow all origins in production
+    # This is safe because we use Bearer tokens (no cookie auth)
+    cors_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=False,  # Bearer tokens don't need credentials; cookies do
     allow_methods=["*"],
     allow_headers=["*"],
 )
