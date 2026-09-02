@@ -48,12 +48,15 @@ async def lifespan(app: FastAPI):
     logger.info(f"   Environment : {settings.APP_ENV}")
     logger.info(f"   Version     : {settings.APP_VERSION}")
 
-    # Ensure initial admin/demo users exist (idempotent startup initialization)
-    try:
-        from scripts.seed import run_seed
-        run_seed()
-    except Exception as exc:
-        logger.warning(f"Startup initialization note: {exc}")
+    # Seed demo data only in development mode (production should use migrations)
+    if settings.is_development:
+        try:
+            from scripts.seed import run_seed
+            run_seed()
+        except Exception as exc:
+            logger.warning(f"Startup seed note: {exc}")
+    else:
+        logger.info("   Skipping auto-seed (production mode)")
 
     yield
     logger.info("Virtual Science Lab API shutting down. Goodbye!")

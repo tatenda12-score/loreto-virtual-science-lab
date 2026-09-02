@@ -3,6 +3,8 @@
  * ----------------------------
  * Global authentication context — wraps the entire app so any component
  * can read the current user and call login/logout without prop drilling.
+ *
+ * Uses Bearer JWT tokens stored in localStorage for authentication.
  */
 
 import {
@@ -15,11 +17,11 @@ import {
 } from 'react'
 
 import {
-  setLoginState,
+  setToken,
+  clearToken,
   getMe,
   isLoggedIn,
   loginUser,
-  logoutUser,
   type UserProfile,
 } from '@/services/api'
 
@@ -43,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isLoggedIn()) {
       getMe()
         .then(setUser)
-        .catch(() => { setLoginState(false); setUser(null) })
+        .catch(() => { clearToken(); setUser(null) })
         .finally(() => setLoading(false))
     } else {
       setLoading(false)
@@ -51,23 +53,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = useCallback(async (email: string, password: string): Promise<UserProfile> => {
-    await loginUser(email, password)
-    setLoginState(true)
+    // Call login endpoint → get JWT token back
+    const token = await loginUser(email, password)
+    // Store the token in localStorage
+    setToken(token)
+    // Fetch user profile using the new token
     const profile = await getMe()
     setUser(profile)
     return profile
   }, [])
 
-  const logout = useCallback(async () => {
-    try {
-      await logoutUser()
-    } catch (err) {
-      console.error("Logout error", err)
-    } finally {
-      setLoginState(false)
-      setUser(null)
-      window.location.href = '/login'
-    }
+  const logout = useCallback(() => {
+    clearToken()
+    setUser(null)
+    window.location.href = '/login'
   }, [])
 
   return (

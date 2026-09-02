@@ -9,6 +9,7 @@
  *  - Request interceptor automatically attaches JWT from localStorage
  *  - Response interceptor redirects to /login on 401 (token expired / missing)
  *  - Typed helper functions for all API operations
+ *  - Cold-start detection for Render free-tier (30-60s wake-up)
  */
 
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
@@ -21,13 +22,16 @@ export const API_BASE  = (import.meta.env.VITE_API_URL as string | undefined)?.t
 const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 15_000,
-  withCredentials: true, // Send HttpOnly cookies with every request
+  timeout: 90_000, // 90 seconds — accommodates Render free-tier cold starts (30-60s)
 })
 
-// ── Request interceptor ───────────────────────────────────────────────────
+// ── Request interceptor — attach Bearer token ─────────────────────────────
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    const token = localStorage.getItem(TOKEN_KEY)
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   (error: AxiosError) => Promise.reject(error),
@@ -39,6 +43,7 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Token expired or invalid — clear state and redirect to login
+      localStorage.removeItem(TOKEN_KEY)
       localStorage.removeItem('is_logged_in')
       if (window.location.pathname !== '/login') {
         window.location.href = '/login'
@@ -49,11 +54,77 @@ api.interceptors.response.use(
 )
 
 // ── Token helpers ──────────────────────────────────────────────────────────
-export const setLoginState  = (state: boolean) => {
-  if (state) localStorage.setItem('is_logged_in', 'true');
-  else localStorage.removeItem('is_logged_in');
+export const setToken = (token: string) => {
+  localStorage.setItem(TOKEN_KEY, token)
+  localStorage.setItem('is_logged_in', 'true')
+}
+export const clearToken = () => {
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem('is_logged_in')
 }
 export const isLoggedIn = () => Boolean(localStorage.getItem('is_logged_in'))
+
+// ── Cold-start / error detection helpers ───────────────────────────────────
+/**
+ * Determines a user-friendly error message from an Axios error.
+ * Distinguishes between cold-start timeouts, network errors, auth failures,
+ * and server errors.
+ */
+export function getErrorMessage(err: unknown, context: 'login' | 'register' = 'login'): string {
+  if (!axios.isAxiosError(err)) {
+    return 'An unexpected error occurred. Please try again.'
+  }
+
+  const axErr = err as AxiosError<{ detail?: string | Array<{ msg?: string }> }>
+
+  // Timeout — likely Render cold start
+  if (axErr.code === 'ECONNABORTED' || axErr.message?.includes('timeout')) {
+    return 'The server is waking up from sleep mode. Please wait a moment and try again.'
+  }
+
+  // Network error — no response received at all
+  if (!axErr.response) {
+    return 'Unable to connect to the server. Please check your internet connection and try again.'
+  }
+
+  const status = axErr.response.status
+  const detail = axErr.response.data?.detail
+
+  // 401 — wrong credentials
+  if (status === 401) {
+    return 'Incorrect email or password. Please try again.'
+  }
+
+  // 403 — account deactivated
+  if (status === 403) {
+    return typeof detail === 'string' ? detail : 'Your account has been deactivated. Contact the administrator.'
+  }
+
+  // 409 — duplicate email (registration)
+  if (status === 409) {
+    return 'An account with this email already exists. Please sign in instead.'
+  }
+
+  // 422 — validation error
+  if (status === 422) {
+    if (Array.isArray(detail) && detail.length > 0) {
+      return detail[0]?.msg || 'Please check your input and try again.'
+    }
+    if (typeof detail === 'string') return detail
+    return 'Please check your input and try again.'
+  }
+
+  // 5xx — server error
+  if (status >= 500) {
+    return 'The server encountered an error. Please try again in a moment.'
+  }
+
+  // Fallback with context-aware message
+  if (typeof detail === 'string') return detail
+  return context === 'login'
+    ? 'Login failed. Please try again.'
+    : 'Registration failed. Please try again.'
+}
 
 // ── API helper types ───────────────────────────────────────────────────────
 export interface LoginPayload  { username: string; password: string }
@@ -170,21 +241,27 @@ export interface AuditLog {
 // ── Auth API calls ─────────────────────────────────────────────────────────
 /**
  * Login with email + password (OAuth2 form).
- * Returns the JWT token string on success.
+ * Returns the JWT access token string on success.
+ * Uses the standard /auth/login endpoint that returns the token in the response body.
  */
-export async function loginUser(email: string, password: string): Promise<void> {
+export async function loginUser(email: string, password: string): Promise<string> {
   // FastAPI OAuth2PasswordRequestForm expects form-encoded data
   const params = new URLSearchParams()
   params.append('username', email)
   params.append('password', password)
 
-  await api.post<TokenResponse>('/auth/login/cookie', params, {
+  const res = await api.post<TokenResponse>('/auth/login', params, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   })
+  return res.data.access_token
 }
 
+/**
+ * Logout — clears the local JWT token.
+ * No backend call needed since we're using stateless JWT tokens.
+ */
 export async function logoutUser(): Promise<void> {
-  await api.post('/auth/logout')
+  clearToken()
 }
 
 /** Register a new student account. */

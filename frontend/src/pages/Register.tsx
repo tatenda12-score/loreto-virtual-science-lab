@@ -1,11 +1,10 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { registerStudent } from '@/services/api'
-import { AxiosError } from 'axios'
+import { registerStudent, getErrorMessage } from '@/services/api'
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -19,11 +18,22 @@ export default function Register() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [coldStart, setColdStart] = useState(false)
+
+  // Show cold-start message after 5 seconds of loading
+  useEffect(() => {
+    if (!loading) {
+      setColdStart(false)
+      return
+    }
+    const timer = setTimeout(() => setColdStart(true), 5000)
+    return () => clearTimeout(timer)
+  }, [loading])
 
   const validatePassword = (pwd: string) => {
     if (pwd.length < 8) return 'Password must be at least 8 characters long.'
     if (!/[A-Z]/.test(pwd)) return 'Password must contain at least one uppercase letter.'
-    if (!/\d/.test(pwd)) return 'Password must contain at least one number.'
+    if (/\d/.test(pwd) === false) return 'Password must contain at least one number.'
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) return 'Password must contain at least one special character.'
     return null
   }
@@ -61,6 +71,7 @@ export default function Register() {
     }
 
     setLoading(true)
+    setColdStart(false)
     try {
       await registerStudent({
         full_name: formData.full_name.trim(),
@@ -71,19 +82,7 @@ export default function Register() {
       })
       setSuccess(true)
     } catch (err) {
-      if (err instanceof AxiosError && err.response) {
-        if (err.response.status === 409 || err.response.data?.detail?.includes('already registered')) {
-          setError('This email is already registered.')
-        } else if (typeof err.response.data?.detail === 'string') {
-          setError(err.response.data.detail)
-        } else if (Array.isArray(err.response.data?.detail)) {
-           setError(err.response.data.detail[0]?.msg || 'Validation error')
-        } else {
-          setError('Registration failed. Please try again.')
-        }
-      } else {
-        setError('Unable to connect. Please try again.')
-      }
+      setError(getErrorMessage(err, 'register'))
     } finally {
       setLoading(false)
     }
@@ -235,6 +234,17 @@ export default function Register() {
                 />
               </div>
 
+              {/* Cold-start awareness banner */}
+              {loading && coldStart && (
+                <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 flex items-center gap-3">
+                  <svg className="w-5 h-5 shrink-0 animate-spin text-amber-500" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  <span>Server is waking up — this may take up to a minute on first use. Please wait…</span>
+                </div>
+              )}
+
               {error && (
                 <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
                   {error}
@@ -252,7 +262,7 @@ export default function Register() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                     </svg>
-                    Creating account...
+                    {coldStart ? 'Connecting to server…' : 'Creating account…'}
                   </span>
                 ) : <span className="py-1">Sign up</span>}
               </Button>
