@@ -140,7 +140,7 @@ async def unhandled_exception_handler(request, exc: Exception):
     return JSONResponse(
         status_code=500,
         content={
-            "detail": "An unexpected error occurred. Please contact support.",
+            "detail": str(exc),
         },
     )
 
