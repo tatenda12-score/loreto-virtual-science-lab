@@ -228,6 +228,7 @@ SEED_EXPERIMENTS: list[dict] = [
         ],
         "instructions":    OHM_INSTRUCTIONS,
         "parameters":      OHM_PARAMETERS,
+        "class_level":     "Form4",
     },
     {
         "title":           "Acid-Base Titration — Determining NaOH Concentration",
@@ -251,6 +252,7 @@ SEED_EXPERIMENTS: list[dict] = [
         ],
         "instructions":    TITRATION_INSTRUCTIONS,
         "parameters":      TITRATION_PARAMETERS,
+        "class_level":     "Form4",
     },
     {
         "title":           "Food Tests",
@@ -323,6 +325,145 @@ SEED_EXPERIMENTS: list[dict] = [
             "tolerance": 0.05,
         },
         "class_level": "Form3",
+    },
+    {
+        "title":           "Enzyme Activity — Investigating Factors Affecting Enzyme Action",
+        "subject":         Subject.biology,
+        "difficulty":      Difficulty.advanced,
+        "simulation_type": SimulationType.enzyme_activity,
+        "status":          ExperimentStatus.published,
+        "topic":           "Enzymes",
+        "description": "Investigate how variables such as temperature affect the rate of amylase activity on starch.",
+        "materials": ["Test tubes", "Water baths", "Thermometer", "Stopwatch", "Starch solution", "Amylase", "Iodine"],
+        "instructions": [
+            {"step": 1, "action": "Set the water bath to the desired temperature."},
+            {"step": 2, "action": "Mix amylase and starch, and start the timer."},
+            {"step": 3, "action": "Take samples at regular intervals and test with iodine."},
+            {"step": 4, "action": "Record the time taken for the starch to be completely broken down."}
+        ],
+        "parameters": {
+            "expected_values": {
+                "optimum_temp": 37.0
+            },
+            "tolerance": 2.0
+        },
+        "class_level": "L6",
+    },
+    {
+        "title":           "Quantitative Acid–Base Titration — Determination of an Unknown Concentration",
+        "subject":         Subject.chemistry,
+        "difficulty":      Difficulty.advanced,
+        "simulation_type": SimulationType.l6_titration,
+        "status":          ExperimentStatus.published,
+        "topic":           "Quantitative Analysis",
+        "description": "Perform a quantitative acid-base titration to determine the concentration of an unknown solution. Record rough and accurate titres.",
+        "materials": ["Burette", "Pipette", "Conical flask", "Acid solution", "Alkali solution", "Indicator", "White tile"],
+        "instructions": [
+            {"step": 1, "action": "Perform a rough titration to find the approximate endpoint."},
+            {"step": 2, "action": "Perform accurate titrations dropwise near the endpoint."},
+            {"step": 3, "action": "Identify concordant results (within 0.10 cm³)."},
+            {"step": 4, "action": "Calculate the mean titre and determine the unknown concentration."}
+        ],
+        "parameters": {
+            "expected_values": {
+                "mean_titre_cm3": 25.0
+            },
+            "tolerance": 0.2
+        },
+        "class_level": "L6",
+    },
+    {
+        "title":           "Internal Resistance of a Cell",
+        "subject":         Subject.physics,
+        "difficulty":      Difficulty.advanced,
+        "simulation_type": SimulationType.internal_resistance,
+        "status":          ExperimentStatus.published,
+        "topic":           "Current Electricity",
+        "description": "Investigate the relationship between terminal potential difference and current to determine the internal resistance and EMF of a cell.",
+        "materials": ["Cell", "Ammeter", "Voltmeter", "Variable resistor", "Switch", "Connecting wires"],
+        "instructions": [
+            {"step": 1, "action": "Construct a circuit with the cell, variable resistor, and switch in series."},
+            {"step": 2, "action": "Connect the voltmeter in parallel across the cell."},
+            {"step": 3, "action": "Vary the external resistance and record pairs of V and I."},
+            {"step": 4, "action": "Plot V against I to find EMF (intercept) and internal resistance (negative gradient)."}
+        ],
+        "parameters": {
+            "expected_values": {
+                "emf_V": 1.5,
+                "internal_resistance_ohm": 0.5
+            },
+            "tolerance": 0.1
+        },
+        "class_level": "L6",
+    },
+    {
+        "title":           "Investigating the Rate of Photosynthesis and Limiting Factors",
+        "subject":         Subject.biology,
+        "difficulty":      Difficulty.advanced,
+        "simulation_type": SimulationType.u6_photosynthesis,
+        "status":          ExperimentStatus.published,
+        "topic":           "Photosynthesis",
+        "description": "Create an advanced Upper 6 biology practical investigating factors affecting the rate of photosynthesis. Measure oxygen production as an indicator of photosynthetic rate.",
+        "materials": ["Aquatic plant", "Transparent container", "Lamp", "Thermometer", "Stopwatch", "NaHCO3 solution", "Gas syringe"],
+        "instructions": [
+            {"step": 1, "action": "Select the independent variable (Light, CO2, Temp)."},
+            {"step": 2, "action": "Control the other variables."},
+            {"step": 3, "action": "Measure the rate of oxygen production over time."},
+            {"step": 4, "action": "Plot a graph and identify the limiting factor plateau."}
+        ],
+        "parameters": {
+            "expected_values": {
+                "plateau_rate": 10.0
+            },
+            "tolerance": 2.0
+        },
+        "class_level": "Upper6",
+    },
+    {
+        "title":           "Chemical Kinetics and Determination of Activation Energy",
+        "subject":         Subject.chemistry,
+        "difficulty":      Difficulty.advanced,
+        "simulation_type": SimulationType.u6_kinetics,
+        "status":          ExperimentStatus.published,
+        "topic":           "Chemical Kinetics",
+        "description": "Determine activation energy by investigating how reaction rate changes with temperature.",
+        "materials": ["Reaction vessel", "Pipette", "Thermometer", "Stopwatch", "Water bath", "Reactants"],
+        "instructions": [
+            {"step": 1, "action": "Perform the reaction at several different temperatures."},
+            {"step": 2, "action": "Record the time taken for the reaction to complete."},
+            {"step": 3, "action": "Calculate rate, 1/T (Kelvin), and ln(k)."},
+            {"step": 4, "action": "Plot an Arrhenius graph to determine activation energy from the gradient."}
+        ],
+        "parameters": {
+            "expected_values": {
+                "activation_energy_kj_mol": 50.0
+            },
+            "tolerance": 5.0
+        },
+        "class_level": "Upper6",
+    },
+    {
+        "title":           "Young Modulus and Elastic Behaviour of a Wire",
+        "subject":         Subject.physics,
+        "difficulty":      Difficulty.advanced,
+        "simulation_type": SimulationType.u6_young_modulus,
+        "status":          ExperimentStatus.published,
+        "topic":           "Materials",
+        "description": "Investigate the relationship between force and extension and determine Young modulus.",
+        "materials": ["Wire specimen", "Micrometer", "Mass hanger", "Slotted masses", "Vernier scale"],
+        "instructions": [
+            {"step": 1, "action": "Measure the diameter of the wire using a micrometer."},
+            {"step": 2, "action": "Add slotted masses and record the extension."},
+            {"step": 3, "action": "Calculate Stress and Strain."},
+            {"step": 4, "action": "Plot a Force-Extension graph and determine Young Modulus."}
+        ],
+        "parameters": {
+            "expected_values": {
+                "young_modulus_gpa": 120.0
+            },
+            "tolerance": 15.0
+        },
+        "class_level": "Upper6",
     }
 ]
 

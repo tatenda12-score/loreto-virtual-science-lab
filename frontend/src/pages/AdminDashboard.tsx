@@ -6,6 +6,7 @@ import {
   fetchUsers,
   createTeacher,
   updateUser,
+  deleteUser,
   fetchExperiments,
   fetchSubmissionsForExperiment,
   createExperiment,
@@ -35,7 +36,7 @@ import {
 } from 'lucide-react'
 import ExperimentBuilder from '@/components/experiments/ExperimentBuilder'
 
-type TabType = 'overview' | 'teachers' | 'students' | 'experiments' | 'submissions' | 'audit_logs'
+type TabType = 'overview' | 'teachers' | 'students' | 'experiments' | 'submissions' | 'audit_logs' | 'delete_users'
 
 const SUBJECT_BADGE: Record<string, string> = {
   Physics:   'bg-violet-50 text-violet-700 border-violet-200',
@@ -68,7 +69,7 @@ export default function AdminDashboard() {
   // Students State
   const [students, setStudents] = useState<UserProfile[]>([])
   const [loadingStudents, setLoadingStudents] = useState(false)
-  const [studentClassFilter, setStudentClassFilter] = useState<'All' | 'Form3' | 'Form4' | 'L6' | 'Upper6' | 'Unassigned'>('All')
+  const [studentClassFilter, setStudentClassFilter] = useState<string>('All')
 
   // Experiments State
   const [experiments, setExperiments] = useState<Experiment[]>([])
@@ -100,6 +101,10 @@ export default function AdminDashboard() {
     else if (activeTab === 'students' && students.length === 0) loadStudents()
     else if (activeTab === 'experiments' && experiments.length === 0) loadExperiments()
     else if (activeTab === 'audit_logs' && auditLogs.length === 0) loadAuditLogs()
+    else if (activeTab === 'delete_users') {
+      if (teachers.length === 0) loadTeachers()
+      if (students.length === 0) loadStudents()
+    }
   }, [activeTab])
 
   // --- API Loaders ---
@@ -175,6 +180,20 @@ export default function AdminDashboard() {
       }
     } catch (e) {
       alert('Failed to update user status.')
+    }
+  }
+
+  async function handleDeleteUser(userId: number, role: 'teacher'|'student') {
+    if (!confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')) return
+    try {
+      await deleteUser(userId)
+      if (role === 'teacher') {
+        setTeachers(prev => prev.filter(t => t.id !== userId))
+      } else {
+        setStudents(prev => prev.filter(s => s.id !== userId))
+      }
+    } catch (e: any) {
+      alert(e.response?.data?.detail || 'Failed to delete user.')
     }
   }
 
@@ -329,27 +348,80 @@ export default function AdminDashboard() {
   }
 
   const renderStudents = () => {
+    const availableClasses = Array.from(new Set(students.map(s => s.class_level || 'Unknown'))).sort()
+    
+    const filteredStudents = studentClassFilter === 'All' 
+      ? students 
+      : students.filter(s => (s.class_level || 'Unknown') === studentClassFilter)
+
     return (
       <div className="space-y-6">
         <h2 className="text-lg font-semibold">Manage Students</h2>
+        
+        {/* Class Filter Buttons */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <Button 
+            variant={studentClassFilter === 'All' ? 'default' : 'outline'} 
+            size="sm" 
+            onClick={() => setStudentClassFilter('All')}
+            className={studentClassFilter === 'All' ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm' : 'border-slate-300 text-slate-700 hover:bg-slate-50'}
+          >
+            All Students ({students.length})
+          </Button>
+          {availableClasses.map(cls => {
+            const count = students.filter(s => (s.class_level || 'Unknown') === cls).length;
+            return (
+              <Button 
+                key={cls}
+                variant={studentClassFilter === cls ? 'default' : 'outline'} 
+                size="sm" 
+                onClick={() => setStudentClassFilter(cls)}
+                className={studentClassFilter === cls ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm' : 'border-slate-300 text-slate-700 hover:bg-slate-50'}
+              >
+                {cls} ({count})
+              </Button>
+            )
+          })}
+        </div>
+
         {loadingStudents ? <p className="text-slate-400">Loading students...</p> : (
-          <div className="grid gap-4">
-            {students.length === 0 ? <p className="text-slate-500">No students found.</p> : students.map(s => (
-              <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-slate-200 bg-white shadow-sm gap-4">
-                <div>
-                  <p className="font-semibold text-slate-900">{s.full_name}</p>
-                  <p className="text-sm text-slate-500">{s.email} &bull; Class: {s.class_level || 'N/A'}</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className={`text-xs px-2 py-1 rounded-md border font-medium ${s.is_active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                    {s.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                  <Button variant="outline" size="sm" onClick={() => handleToggleUserStatus(s.id, s.is_active, 'student')} className="border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm">
-                    {s.is_active ? 'Deactivate' : 'Activate'}
-                  </Button>
-                </div>
-              </div>
-            ))}
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold text-slate-700">Name</th>
+                    <th className="px-6 py-4 font-semibold text-slate-700">Email</th>
+                    <th className="px-6 py-4 font-semibold text-slate-700">Class</th>
+                    <th className="px-6 py-4 font-semibold text-slate-700 text-center">Status</th>
+                    <th className="px-6 py-4 font-semibold text-slate-700 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {filteredStudents.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No students found in this class.</td>
+                    </tr>
+                  ) : filteredStudents.map(s => (
+                    <tr key={s.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-slate-900">{s.full_name}</td>
+                      <td className="px-6 py-4 text-slate-500">{s.email}</td>
+                      <td className="px-6 py-4 text-slate-500">{s.class_level || 'N/A'}</td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`text-xs px-2 py-1 rounded-md border font-medium inline-flex ${s.is_active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                          {s.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Button variant="outline" size="sm" onClick={() => handleToggleUserStatus(s.id, s.is_active, 'student')} className="border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm">
+                          {s.is_active ? 'Deactivate' : 'Activate'}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
@@ -536,6 +608,49 @@ export default function AdminDashboard() {
     )
   }
 
+  const renderDeleteUsers = () => {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-xl font-bold text-red-600">Danger Zone: Delete Users</h2>
+          <p className="text-sm text-slate-500 mt-1">Permanently remove users from the system. This action cannot be undone.</p>
+        </div>
+        
+        <div className="grid gap-8 mt-6">
+          <div className="space-y-4">
+            <h3 className="font-semibold text-slate-800">Students</h3>
+            {students.length === 0 ? <p className="text-slate-500">No students available.</p> : students.map(s => (
+              <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-red-100 bg-red-50/30 shadow-sm gap-4">
+                <div>
+                  <p className="font-semibold text-slate-900">{s.full_name}</p>
+                  <p className="text-sm text-slate-500">{s.email} &bull; Class: {s.class_level || 'N/A'}</p>
+                </div>
+                <Button variant="destructive" onClick={() => handleDeleteUser(s.id, 'student')}>
+                  Permanently Delete
+                </Button>
+              </div>
+            ))}
+          </div>
+          
+          <div className="space-y-4">
+            <h3 className="font-semibold text-slate-800">Teachers</h3>
+            {teachers.length === 0 ? <p className="text-slate-500">No teachers available.</p> : teachers.map(t => (
+              <div key={t.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-red-100 bg-red-50/30 shadow-sm gap-4">
+                <div>
+                  <p className="font-semibold text-slate-900">{t.full_name}</p>
+                  <p className="text-sm text-slate-500">{t.email} &bull; Subject: {t.subject_code || 'N/A'}</p>
+                </div>
+                <Button variant="destructive" onClick={() => handleDeleteUser(t.id, 'teacher')}>
+                  Permanently Delete
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-100">
       {/* --- Top Nav --- */}
@@ -567,21 +682,23 @@ export default function AdminDashboard() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-6 tracking-tight">Admin Dashboard</h1>
           
-          <div className="flex overflow-x-auto pb-px scrollbar-hide gap-6 border-b border-slate-200">
-            {(['overview', 'teachers', 'students', 'experiments', 'submissions', 'audit_logs'] as TabType[]).map(tab => (
+          <nav className="flex space-x-1 p-1 bg-slate-100 rounded-xl overflow-x-auto">
+            {(['overview', 'teachers', 'students', 'experiments', 'submissions', 'audit_logs', 'delete_users'] as TabType[]).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`text-sm font-semibold pb-3 transition-colors border-b-2 whitespace-nowrap ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
                   activeTab === tab
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                    ? tab === 'delete_users'
+                      ? 'bg-red-600 text-white shadow-sm'
+                      : 'bg-white text-blue-700 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1).replace('_', ' ')}
               </button>
             ))}
-          </div>
+          </nav>
         </div>
 
         {/* --- Tab Content --- */}
@@ -592,6 +709,7 @@ export default function AdminDashboard() {
           {activeTab === 'experiments' && renderExperiments()}
           {activeTab === 'submissions' && renderSubmissions()}
           {activeTab === 'audit_logs' && renderAuditLogs()}
+          {activeTab === 'delete_users' && renderDeleteUsers()}
         </div>
       </div>
     </div>

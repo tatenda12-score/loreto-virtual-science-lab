@@ -331,6 +331,11 @@ export async function updateUser(id: number, data: AdminUserUpdatePayload): Prom
   return res.data
 }
 
+/** Permanently delete a user (admin only). */
+export async function deleteUser(id: number): Promise<void> {
+  await api.delete(`/admin/users/${id}`)
+}
+
 // ── Experiments API calls ──────────────────────────────────────────────────
 
 // ── Experiments API ────────────────────────────────────────────────────────

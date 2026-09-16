@@ -55,6 +55,12 @@ class SimulationType(str, enum.Enum):
     food_tests = "food_tests"
     separation = "separation"
     moments = "moments"
+    enzyme_activity = "enzyme_activity"
+    l6_titration = "l6_titration"
+    internal_resistance = "internal_resistance"
+    u6_photosynthesis = "u6_photosynthesis"
+    u6_kinetics = "u6_kinetics"
+    u6_young_modulus = "u6_young_modulus"
     generic = "generic"
 
 

@@ -230,3 +230,29 @@ def get_audit_logs(
         .all()
     )
     return [AuditLogResponse.model_validate(log) for log in logs]
+
+# ---------------------------------------------------------------------------
+# DELETE /admin/users/{user_id} — permanently delete a user
+# ---------------------------------------------------------------------------
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    _current_user: User = _admin_dep,
+):
+    """Permanently delete a user (Student or Teacher) from the system."""
+    if user_id == _current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot delete yourself.",
+        )
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    log_action(db, _current_user.id, "user_deleted", "User", str(user.id), {"email": user.email, "role": user.role})
+    
+    db.delete(user)
+    db.commit()
+    return None
