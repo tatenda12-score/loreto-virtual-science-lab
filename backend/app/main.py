@@ -189,14 +189,6 @@ async def health_check_db() -> dict:
             content={"status": "unhealthy", "database": "unreachable"},
         )
 
-
-@app.post(
-    "/setup/seed",
-    tags=["System"],
-    summary="Initialize / Seed Database",
-    description="Seeds default admin, teacher, and experiments idempotently.",
-)
-
 @app.post("/setup/fix_enums", tags=["System"])
 def fix_enums():
     from sqlalchemy import text
