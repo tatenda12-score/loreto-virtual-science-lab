@@ -204,11 +204,37 @@ def fix_enums():
     import logging
     try:
         with SessionLocal() as db:
-            db.execute(text("ALTER TYPE simulation_type_enum ADD VALUE IF NOT EXISTS 'food_tests';"))
-            db.execute(text("ALTER TYPE simulation_type_enum ADD VALUE IF NOT EXISTS 'separation';"))
-            db.execute(text("ALTER TYPE simulation_type_enum ADD VALUE IF NOT EXISTS 'moments';"))
+            # All simulation types needed for Form3, Form4, L6, and Upper6
+            new_values = [
+                'food_tests',
+                'separation',
+                'moments',
+                'enzyme_activity',
+                'l6_titration',
+                'internal_resistance',
+                'u6_photosynthesis',
+                'u6_kinetics',
+                'u6_young_modulus',
+            ]
+            added = []
+            for val in new_values:
+                try:
+                    db.execute(text(f"ALTER TYPE simulation_type_enum ADD VALUE IF NOT EXISTS '{val}'"))
+                    added.append(val)
+                except Exception as e:
+                    logging.warning(f"Could not add enum value {val}: {e}")
             db.commit()
-        return {"status": "ok", "message": "Enums updated"}
+
+            # Also ensure class_level column exists on experiments
+            try:
+                db.execute(text(
+                    "ALTER TABLE experiments ADD COLUMN IF NOT EXISTS class_level VARCHAR(50) NULL"
+                ))
+                db.commit()
+            except Exception as e:
+                logging.warning(f"class_level column note: {e}")
+
+        return {"status": "ok", "message": "Enums and schema updated", "values_processed": added}
     except Exception as exc:
         logging.error(f"Enum update failed: {exc}")
         return {"status": "error", "detail": str(exc)}
