@@ -240,6 +240,15 @@ export default function StudentDashboard() {
     ? Math.round(gradedSubs.reduce((a, s) => a + (s.automatic_score ?? 0), 0) / gradedSubs.length)
     : null
 
+  const filteredExperiments = experiments.filter(e => {
+    // If the student doesn't have a class level, show everything
+    if (!user?.class_level) return true;
+    // If the experiment doesn't have a class level, show it to everyone
+    if (!e.class_level) return true;
+    // Otherwise, they must match exactly
+    return e.class_level === user.class_level;
+  })
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -323,11 +332,11 @@ export default function StudentDashboard() {
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Available Experiments</h2>
           {loadingExp ? (
             <div className="text-slate-500 text-sm">Loading experiments...</div>
-          ) : experiments.length === 0 ? (
+          ) : filteredExperiments.length === 0 ? (
             <div className="text-slate-500 text-sm">No experiments available yet.</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {experiments.map((exp) => {
+              {filteredExperiments.map((exp) => {
                 const isInteractive = SimulationRegistry[exp.simulation_type] !== undefined;
                 return (
                   <div

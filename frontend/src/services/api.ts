@@ -227,6 +227,7 @@ export interface Experiment {
   status:          'draft' | 'published' | 'archived'
   topic:           string | null
   description:     string
+  class_level:     string | null
   materials:       string[] | Record<string, unknown> | null
   instructions:    Record<string, unknown>[] | null
   parameters:      Record<string, unknown> | null

@@ -625,7 +625,7 @@ export default function AdminDashboard() {
                   <p className="font-semibold text-slate-900">{s.full_name}</p>
                   <p className="text-sm text-slate-500">{s.email} &bull; Class: {s.class_level || 'N/A'}</p>
                 </div>
-                <Button variant="destructive" onClick={() => handleDeleteUser(s.id, 'student')}>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => handleDeleteUser(s.id, 'student')}>
                   Permanently Delete
                 </Button>
               </div>
@@ -640,7 +640,7 @@ export default function AdminDashboard() {
                   <p className="font-semibold text-slate-900">{t.full_name}</p>
                   <p className="text-sm text-slate-500">{t.email} &bull; Subject: {t.subject_code || 'N/A'}</p>
                 </div>
-                <Button variant="destructive" onClick={() => handleDeleteUser(t.id, 'teacher')}>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => handleDeleteUser(t.id, 'teacher')}>
                   Permanently Delete
                 </Button>
               </div>

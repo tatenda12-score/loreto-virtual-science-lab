@@ -253,6 +253,12 @@ def delete_user(
 
     log_action(db, _current_user.id, "user_deleted", "User", str(user.id), {"email": user.email, "role": user.role})
     
+    # Manually delete dependent records to avoid foreign key constraint violations
+    db.query(AuditLog).filter(AuditLog.user_id == user_id).delete(synchronize_session=False)
+    db.query(Submission).filter(Submission.student_id == user_id).delete(synchronize_session=False)
+    if user.role == UserRole.teacher:
+        db.query(Experiment).filter(Experiment.created_by == user_id).delete(synchronize_session=False)
+
     db.delete(user)
     db.commit()
     return None
