@@ -196,6 +196,30 @@ async def health_check_db() -> dict:
     summary="Initialize / Seed Database",
     description="Seeds default admin, teacher, and experiments idempotently.",
 )
+
+@app.post("/setup/fix_enums", tags=["System"])
+def fix_enums():
+    from sqlalchemy import text
+    from app.db.database import SessionLocal
+    import logging
+    try:
+        with SessionLocal() as db:
+            db.execute(text("ALTER TYPE simulation_type_enum ADD VALUE IF NOT EXISTS 'food_tests';"))
+            db.execute(text("ALTER TYPE simulation_type_enum ADD VALUE IF NOT EXISTS 'separation';"))
+            db.execute(text("ALTER TYPE simulation_type_enum ADD VALUE IF NOT EXISTS 'moments';"))
+            db.commit()
+        return {"status": "ok", "message": "Enums updated"}
+    except Exception as exc:
+        logging.error(f"Enum update failed: {exc}")
+        return {"status": "error", "detail": str(exc)}
+
+
+@app.post(
+    "/setup/seed",
+    tags=["System"],
+    summary="Initialize / Seed Database",
+    description="Seeds default admin, teacher, and experiments idempotently.",
+)
 def setup_seed():
     try:
         from scripts.seed import run_seed
