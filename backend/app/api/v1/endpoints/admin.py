@@ -150,6 +150,7 @@ def create_teacher(
         role=UserRole.teacher,          # Always teacher — no escalation
         subject_code=payload.subject_code,
         gender=payload.gender,
+        class_level=payload.class_level,
         is_active=True,
         is_verified=True,               # Admin-created teachers are pre-verified
     )

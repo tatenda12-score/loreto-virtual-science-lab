@@ -111,14 +111,21 @@ def grade_submission(
         if student_val is None:
             scores.append(0.0)
         else:
-            try:
-                score = evaluate_submission(
-                    expected_val=float(expected),
-                    student_val=float(student_val),
-                    tolerance=tolerance,
-                )
+            if isinstance(expected, str):
+                score = 100.0 if str(student_val).strip().lower() == expected.strip().lower() else 0.0
                 scores.append(score)
-            except (ValueError, TypeError):
-                scores.append(0.0)
+            elif isinstance(expected, bool):
+                score = 100.0 if bool(student_val) == expected else 0.0
+                scores.append(score)
+            else:
+                try:
+                    score = evaluate_submission(
+                        expected_val=float(expected),
+                        student_val=float(student_val),
+                        tolerance=tolerance,
+                    )
+                    scores.append(score)
+                except (ValueError, TypeError):
+                    scores.append(0.0)
 
     return round(sum(scores) / len(expected_values), 2) if scores else 0.0

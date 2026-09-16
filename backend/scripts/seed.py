@@ -13,7 +13,7 @@ What it creates
   Users
     - 1 Admin       : admin@loreto.edu.ng
     - 1 Teacher     : teacher@loreto.edu.ng  (subject: Physics)
-    - 3 Students    : student1..3@loreto.edu.ng  (classes: SS1, SS2, JSS3)
+    - 3 Students    : student1..3@loreto.edu.ng  (classes: Form4, L6, Form3)
 
   Experiments
     1. Ohm's Law         (Physics   / Intermediate)
@@ -101,7 +101,7 @@ SEED_USERS: list[dict] = [
         "email":           "student1@loreto.edu.ng",
         "hashed_password": HASHED_DEFAULT,
         "role":            UserRole.student,
-        "class_level":     "SS2",
+        "class_level":     "L6",
         "gender":          "Female",
     },
     {
@@ -109,7 +109,7 @@ SEED_USERS: list[dict] = [
         "email":           "student2@loreto.edu.ng",
         "hashed_password": HASHED_DEFAULT,
         "role":            UserRole.student,
-        "class_level":     "SS1",
+        "class_level":     "Form4",
         "gender":          "Male",
     },
     {
@@ -117,7 +117,7 @@ SEED_USERS: list[dict] = [
         "email":           "student3@loreto.edu.ng",
         "hashed_password": HASHED_DEFAULT,
         "role":            UserRole.student,
-        "class_level":     "JSS3",
+        "class_level":     "Form3",
         "gender":          "Female",
     },
 ]
@@ -252,6 +252,78 @@ SEED_EXPERIMENTS: list[dict] = [
         "instructions":    TITRATION_INSTRUCTIONS,
         "parameters":      TITRATION_PARAMETERS,
     },
+    {
+        "title":           "Food Tests",
+        "subject":         Subject.biology,
+        "difficulty":      Difficulty.beginner,
+        "simulation_type": SimulationType.food_tests,
+        "status":          ExperimentStatus.published,
+        "topic":           "Nutrition",
+        "description": "Test different food samples for Starch, Reducing sugars, Protein, and Lipids.",
+        "materials": ["Test tubes", "Iodine solution", "Benedict's solution", "Biuret reagent", "Ethanol"],
+        "instructions": [
+            {"step": 1, "action": "Select a food sample and place it in the test tube."},
+            {"step": 2, "action": "Select the appropriate reagent for the test."},
+            {"step": 3, "action": "Observe the colour change and record your observations."},
+        ],
+        "parameters": {
+            "expected_values": {
+                "potato_iodine_observation": "Blue-black colour",
+                "potato_iodine_conclusion": "Starch present",
+                "egg_biuret_observation": "Purple colour",
+                "egg_biuret_conclusion": "Protein present",
+            },
+            "tolerance": 0.0,
+        },
+        "class_level": "Form3",
+    },
+    {
+        "title":           "Separation of a Mixture - Sand, Salt and Water",
+        "subject":         Subject.chemistry,
+        "difficulty":      Difficulty.intermediate,
+        "simulation_type": SimulationType.separation,
+        "status":          ExperimentStatus.published,
+        "topic":           "Separation Techniques",
+        "description": "Determine and perform the correct sequence of laboratory separation techniques for a mixture.",
+        "materials": ["Filter funnel", "Filter paper", "Evaporating basin", "Bunsen burner", "Beaker"],
+        "instructions": [
+            {"step": 1, "action": "Set up the filtration apparatus using filter paper and funnel."},
+            {"step": 2, "action": "Pour the mixture through the filter paper to separate the sand."},
+            {"step": 3, "action": "Transfer the filtrate to an evaporating basin."},
+            {"step": 4, "action": "Heat the filtrate until the water evaporates to recover the salt."},
+        ],
+        "parameters": {
+            "expected_values": {
+                "sand_separation_method": "Filtration",
+                "salt_separation_method": "Evaporation",
+            },
+            "tolerance": 0.0,
+        },
+        "class_level": "Form3",
+    },
+    {
+        "title":           "Principle of Moments",
+        "subject":         Subject.physics,
+        "difficulty":      Difficulty.intermediate,
+        "simulation_type": SimulationType.moments,
+        "status":          ExperimentStatus.published,
+        "topic":           "Forces and Motion",
+        "description": "Investigate the principle of moments using a metre rule and slotted masses.",
+        "materials": ["Metre rule", "Pivot/knife edge", "Mass hangers", "Slotted masses"],
+        "instructions": [
+            {"step": 1, "action": "Drag weights onto the metre rule at different distances."},
+            {"step": 2, "action": "Calculate the moment for each configuration (Force x Distance)."},
+            {"step": 3, "action": "Record the calculated moments for each trial."},
+        ],
+        "parameters": {
+            "expected_values": {
+                "trial1_moment": 0.40,
+                "trial2_moment": 0.60,
+            },
+            "tolerance": 0.05,
+        },
+        "class_level": "Form3",
+    }
 ]
 
 # ---------------------------------------------------------------------------
@@ -349,8 +421,8 @@ def _seed_submissions(
             student_id=student.id,
             experiment_id=ohm_experiment.id,
             recorded_observations=observations,
-            calculated_score=score,
-            status=SubmissionStatus.submitted,
+            automatic_score=score,
+            status=SubmissionStatus.graded,
             submitted_at=datetime.now(timezone.utc),
         )
         db.add(sub)

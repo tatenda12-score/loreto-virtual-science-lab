@@ -34,7 +34,7 @@ class ExperimentBase(BaseModel):
     )
     simulation_type: SimulationType = Field(
         default=SimulationType.generic,
-        description="Simulation interface type: ohms_law | titration | velocity | ph | generic",
+        description="Simulation interface type: ohms_law | titration | velocity | ph | food_tests | separation | moments | generic",
     )
     status: ExperimentStatus = Field(
         default=ExperimentStatus.draft,
@@ -44,6 +44,11 @@ class ExperimentBase(BaseModel):
         default=None,
         max_length=255,
         description="Curriculum topic e.g. Current Electricity",
+    )
+    class_level: Optional[str] = Field(
+        default=None,
+        max_length=50,
+        description="Target class level (e.g., Form3, Form4). None means all classes.",
     )
     description: str = Field(
         ...,
@@ -89,6 +94,7 @@ class ExperimentUpdate(BaseModel):
     simulation_type: Optional[SimulationType] = None
     status: Optional[ExperimentStatus] = None
     topic: Optional[str] = Field(default=None, max_length=255)
+    class_level: Optional[str] = Field(default=None, max_length=50)
     description: Optional[str] = Field(default=None, min_length=10)
     materials: Optional[list[str] | dict[str, Any]] = None
     instructions: Optional[list[dict[str, Any]]] = None
@@ -134,6 +140,7 @@ class ExperimentStudentResponse(BaseModel):
     simulation_type: SimulationType = SimulationType.generic
     status: ExperimentStatus = ExperimentStatus.published
     topic: Optional[str] = None
+    class_level: Optional[str] = None
     description: str
     materials: Optional[list[str] | dict[str, Any]] = None
     instructions: Optional[list[dict[str, Any]]] = None

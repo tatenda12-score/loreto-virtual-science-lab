@@ -23,6 +23,7 @@ class TeacherCreate(BaseModel):
     password: str = Field(..., min_length=8, max_length=128)
     subject_code: Optional[str] = Field(default=None, max_length=50)
     gender: Optional[str] = Field(default=None, max_length=20)
+    class_level: Optional[str] = Field(default=None, max_length=50)
 
     @field_validator("full_name")
     @classmethod
@@ -61,6 +62,7 @@ class AdminUserUpdate(BaseModel):
     subject_code: Optional[str] = Field(default=None, max_length=50)
     class_level: Optional[str] = Field(default=None, max_length=50)
     gender: Optional[str] = Field(default=None, max_length=20)
+    class_level: Optional[str] = Field(default=None, max_length=50)
     is_active: Optional[bool] = None
 
     @field_validator("full_name")

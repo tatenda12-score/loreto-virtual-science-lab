@@ -49,7 +49,7 @@ class User(Base):
 
     Role-specific fields (`class_level`, `subject_code`) are nullable so
     a single table can serve all three personas without sparse data:
-      - student  → class_level populated  (e.g. "SS2")
+      - student  → class_level populated  (e.g. "Form4")
       - teacher  → subject_code populated (e.g. "CHM301")
       - admin    → both nullable
     """
@@ -98,7 +98,7 @@ class User(Base):
     class_level: Mapped[str | None] = mapped_column(
         String(50),
         nullable=True,
-        comment="e.g. 'JSS1', 'SS2'. Populated for student accounts only.",
+        comment="e.g. 'Form3', 'L6'. Populated for student accounts only.",
     )
 
     # ── Teacher-specific ──────────────────────────────────────────────

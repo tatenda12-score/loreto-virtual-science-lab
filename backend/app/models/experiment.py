@@ -52,6 +52,9 @@ class SimulationType(str, enum.Enum):
     titration = "titration"
     velocity = "velocity"
     ph = "ph"
+    food_tests = "food_tests"
+    separation = "separation"
+    moments = "moments"
     generic = "generic"
 
 
@@ -118,6 +121,11 @@ class Experiment(Base):
         Text,
         nullable=False,
         comment="Overview paragraph shown to students before they start",
+    )
+    class_level: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+        comment="Target class level (e.g., Form3, L6). Null means available to all.",
     )
 
     # ── Simulation & Publication Status ───────────────────────────────

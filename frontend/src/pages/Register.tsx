@@ -178,12 +178,10 @@ export default function Register() {
                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-slate-900 text-sm shadow-sm outline-none transition-all focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20"
                   >
                     <option value="" disabled>Select Class</option>
-                    <option value="JSS1">JSS1</option>
-                    <option value="JSS2">JSS2</option>
-                    <option value="JSS3">JSS3</option>
-                    <option value="SS1">SS1</option>
-                    <option value="SS2">SS2</option>
-                    <option value="SS3">SS3</option>
+                    <option value="Form3">Form3</option>
+                    <option value="Form4">Form4</option>
+                    <option value="L6">L6</option>
+                    <option value="Upper6">Upper6</option>
                   </select>
                 </div>
 

@@ -122,7 +122,7 @@ class TestBatch4WorkflowAndSecurity(unittest.TestCase):
             email="student_test@example.com",
             hashed_password=hash_password("StudentPass123!"),
             role=UserRole.student,
-            class_level="SS2",
+            class_level="L6",
             is_active=True,
             is_verified=True,
         )
@@ -131,7 +131,7 @@ class TestBatch4WorkflowAndSecurity(unittest.TestCase):
             email="student2_test@example.com",
             hashed_password=hash_password("StudentPass123!"),
             role=UserRole.student,
-            class_level="SS1",
+            class_level="Form4",
             is_active=True,
             is_verified=True,
         )
@@ -160,7 +160,7 @@ class TestBatch4WorkflowAndSecurity(unittest.TestCase):
                 "full_name": "New Student",
                 "email": "new_student@example.com",
                 "password": "ValidPassword123!",
-                "class_level": "SS2",
+                "class_level": "L6",
                 "gender": "Female",
             },
         )
@@ -177,7 +177,7 @@ class TestBatch4WorkflowAndSecurity(unittest.TestCase):
                 "full_name": "Another Student",
                 "email": "another_student@example.com",
                 "password": "ValidPassword123!",
-                "class_level": "SS1",
+                "class_level": "Form4",
             },
         )
         self.assertEqual(resp.status_code, 201)
@@ -494,7 +494,7 @@ class TestBatch4WorkflowAndSecurity(unittest.TestCase):
         self.assertEqual(resp.status_code, 201)
         data = resp.json()
         self.assertEqual(data["student_id"], self.student.id)
-        self.assertEqual(data["status"], "submitted")
+        self.assertEqual(data["status"], "graded")
 
     def test_R_student_cannot_access_another_students_submission(self):
         """R. Student cannot view another student's submission (403 Forbidden)."""

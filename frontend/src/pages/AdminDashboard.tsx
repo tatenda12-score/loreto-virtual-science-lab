@@ -63,11 +63,12 @@ export default function AdminDashboard() {
   const [teachers, setTeachers] = useState<UserProfile[]>([])
   const [loadingTeachers, setLoadingTeachers] = useState(false)
   const [showCreateTeacher, setShowCreateTeacher] = useState(false)
-  const [newTeacher, setNewTeacher] = useState({ full_name: '', email: '', password: '', subject_code: '', gender: '' })
+  const [newTeacher, setNewTeacher] = useState({ full_name: '', email: '', password: '', subject_code: '', gender: '', class_level: '' })
 
   // Students State
   const [students, setStudents] = useState<UserProfile[]>([])
   const [loadingStudents, setLoadingStudents] = useState(false)
+  const [studentClassFilter, setStudentClassFilter] = useState<'All' | 'Form3' | 'Form4' | 'L6' | 'Upper6' | 'Unassigned'>('All')
 
   // Experiments State
   const [experiments, setExperiments] = useState<Experiment[]>([])
@@ -183,9 +184,9 @@ export default function AdminDashboard() {
       const created = await createTeacher(newTeacher)
       setTeachers([created, ...teachers])
       setShowCreateTeacher(false)
-      setNewTeacher({ full_name: '', email: '', password: '', subject_code: '', gender: '' })
-    } catch (e) {
-      alert('Failed to create teacher.')
+      setNewTeacher({ full_name: '', email: '', password: '', subject_code: '', gender: '', class_level: '' })
+    } catch (e: any) {
+      alert(e.message || 'Failed to create teacher.')
     }
   }
 
@@ -287,6 +288,13 @@ export default function AdminDashboard() {
                   <option value="male">Male</option>
                   <option value="female">Female</option>
                 </select>
+                <select required className="bg-white border border-slate-300 rounded-md px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm" value={newTeacher.class_level} onChange={e => setNewTeacher({...newTeacher, class_level: e.target.value})}>
+                  <option value="">Select Class</option>
+                  <option value="Form3">Form 3</option>
+                  <option value="Form4">Form 4</option>
+                  <option value="L6">Lower 6</option>
+                  <option value="Upper6">Upper 6</option>
+                </select>
                 <div className="flex justify-end gap-3 sm:col-span-2 mt-2">
                   <Button type="button" variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm" onClick={() => setShowCreateTeacher(false)}>Cancel</Button>
                   <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">Save Teacher</Button>
@@ -302,7 +310,7 @@ export default function AdminDashboard() {
               <div key={t.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-white shadow-sm">
                 <div>
                   <p className="font-semibold text-slate-900">{t.full_name}</p>
-                  <p className="text-sm text-slate-500">{t.email} &bull; {t.subject_code}</p>
+                  <p className="text-sm text-slate-500">{t.email} &bull; {t.subject_code} &bull; Class: {t.class_level || 'N/A'}</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className={`text-xs px-2 py-1 rounded-md border font-medium ${t.is_active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>

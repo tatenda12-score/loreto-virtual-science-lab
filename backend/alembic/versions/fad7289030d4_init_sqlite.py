@@ -30,7 +30,7 @@ def upgrade() -> None:
         sa.Column('role', sa.Enum('admin', 'teacher', 'student', name='userrole'), nullable=False, comment='System role that drives all permission checks'),
         sa.Column('is_active', sa.Boolean(), nullable=False, comment='Soft-disable a user without deleting their record'),
         sa.Column('is_verified', sa.Boolean(), nullable=False, comment='Set to True after email verification is complete'),
-        sa.Column('class_level', sa.String(length=50), nullable=True, comment="e.g. 'JSS1', 'SS2'. Populated for student accounts only."),
+        sa.Column('class_level', sa.String(length=50), nullable=True, comment="e.g. 'Form3', 'L6'. Populated for student accounts only."),
         sa.Column('subject_code', sa.String(length=50), nullable=True, comment="e.g. 'BIO101'. Populated for teacher accounts only."),
         sa.Column('gender', sa.String(length=20), nullable=True, comment='Optional — used for school reporting only.'),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, comment='Row creation timestamp (UTC)'),

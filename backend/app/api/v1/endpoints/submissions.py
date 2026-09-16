@@ -90,7 +90,8 @@ def create_submission(
         recorded_observations=observations,
         automatic_score=automatic_score,
         final_score=automatic_score, # Initially final_score matches automatic_score
-        status=SubmissionStatus.submitted,
+        status=SubmissionStatus.graded,
+        graded_at=datetime.now(timezone.utc),
         submitted_at=datetime.now(timezone.utc),
     )
     db.add(submission)
@@ -157,17 +158,14 @@ def get_submissions_for_experiment(
             detail=f"Experiment with id={experiment_id} not found.",
         )
 
-    # Teachers can only view submissions for experiments they created
-    if _current_user.role == UserRole.teacher and experiment.created_by != _current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not authorized to view submissions for this experiment.",
-        )
+    query = db.query(Submission).filter(Submission.experiment_id == experiment_id)
+
+    # Teachers can only view submissions for their assigned class
+    if _current_user.role == UserRole.teacher:
+        query = query.join(User, Submission.student_id == User.id).filter(User.class_level == _current_user.class_level)
 
     submissions = (
-        db.query(Submission)
-        .filter(Submission.experiment_id == experiment_id)
-        .order_by(Submission.submitted_at.desc())
+        query.order_by(Submission.submitted_at.desc())
         .offset(skip)
         .limit(limit)
         .all()
@@ -236,11 +234,11 @@ def grade_submission_endpoint(
             detail=f"Submission with id={submission_id} not found.",
         )
 
-    # Teachers can only grade submissions for experiments they created
-    if _current_user.role == UserRole.teacher and submission.experiment.created_by != _current_user.id:
+    # Teachers can only grade submissions from their assigned class
+    if _current_user.role == UserRole.teacher and submission.student.class_level != _current_user.class_level:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not authorized to grade submissions for this experiment.",
+            detail="You are not authorized to grade submissions for this student.",
         )
 
     if submission.status == SubmissionStatus.draft:

@@ -22,7 +22,7 @@ from app.core.security import create_access_token, hash_password, verify_passwor
 from app.db.database import get_db
 from app.models.user import User, UserRole
 from app.schemas.token_schema import Token
-from app.schemas.user_schema import UserCreate, UserRegister, UserResponse
+from app.schemas.user_schema import UserCreate, UserRegister, UserResponse, UserPasswordUpdate
 
 router = APIRouter()
 
@@ -191,3 +191,27 @@ def get_me(
     current_user: User = Depends(get_current_active_user),
 ) -> UserResponse:
     return current_user  # type: ignore[return-value]
+
+# ---------------------------------------------------------------------------
+# PATCH /password
+# ---------------------------------------------------------------------------
+@router.patch(
+    "/password",
+    summary="Change user password",
+    description="Allows an authenticated user to change their own password.",
+)
+def change_password(
+    payload: UserPasswordUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect current password.",
+        )
+    
+    current_user.hashed_password = hash_password(payload.new_password)
+    db.flush()
+    db.refresh(current_user)
+    return {"detail": "Password successfully updated"}

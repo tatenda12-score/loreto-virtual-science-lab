@@ -1,7 +1,7 @@
 ================================================================================
   VIRTUAL SCIENCE LABORATORY SYSTEM — PROJECT UPDATE
   Loreto High School
-  Last updated: 02 September 2026
+  Last updated: 16 September 2026
 ================================================================================
 
 
@@ -272,9 +272,9 @@ All seed accounts use the password: Demo123!
   ─────────  ─────────────────────────  ──────────────────────
   Admin      admin@loreto.edu.ng        Full system access
   Teacher    teacher@loreto.edu.ng      Subject: PHY301
-  Student    student1@loreto.edu.ng     Class: SS2 (Amaka)
-  Student    student2@loreto.edu.ng     Class: SS1 (Chidi)
-  Student    student3@loreto.edu.ng     Class: JSS3 (Ngozi)
+  Student    student1@loreto.edu.ng     Class: L6 (Amaka)
+  Student    student2@loreto.edu.ng     Class: Form4 (Chidi)
+  Student    student3@loreto.edu.ng     Class: Form3 (Ngozi)
 
 Seeded Experiments:
   1. "Ohm's Law — Voltage, Current & Power"     (Physics / Intermediate)
@@ -338,14 +338,13 @@ WHAT IS WORKING:
   ✔ Student dashboard with interactive Ohm's Law simulation is working
   ✔ Teacher dashboard with grading panel is working
   ✔ Vite proxy to FastAPI backend is working
+  ✔ Backend virtual environment dependencies installed to fix IDE "Cannot find module" errors (sqlalchemy, pydantic, etc.)
 
 WHAT COULD BE DONE NEXT (not yet built):
   - Additional interactive simulations (Titration, pH, Velocity)
-  - Admin panel for user management (create/deactivate users)
   - Student registration page (currently only via API POST /register)
   - Email verification flow
-  - Password reset functionality
-  - Experiment creation form on the frontend (currently API-only)
+  - Password reset functionality via Email (forgot password)
   - File/image upload for experiment instructions
   - Student leaderboard / analytics
   - Print/export lab reports as PDF
@@ -378,6 +377,10 @@ WHAT COULD BE DONE NEXT (not yet built):
 
   7. JWT tokens stored in localStorage (simple for demo; production should
      consider httpOnly cookies for better security).
+  8. Class-based access control:
+     - Experiments can be assigned to a specific class (e.g. Form4).
+     - Students only see experiments matching their class.
+     - Teachers only see student submissions matching their class.
 
 
 ================================================================================

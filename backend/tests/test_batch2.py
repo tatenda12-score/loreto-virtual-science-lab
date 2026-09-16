@@ -62,7 +62,7 @@ class TestBatch2(unittest.TestCase):
             email="student1@loreto.edu.ng",
             hashed_password=hash_password("Password123!"),
             role=UserRole.student,
-            class_level="SS2",
+            class_level="L6",
             is_active=True,
             is_verified=True,
         )

@@ -21,6 +21,7 @@ import {
   fetchSubmissionsForExperiment,
   gradeSubmission,
   updateExperiment,
+  changePassword,
   type Experiment,
   type Submission,
 } from '@/services/api'
@@ -70,6 +71,30 @@ export default function TeacherDashboard() {
   const [scoreInput,    setScoreInput]    = useState('')
   const [grading,       setGrading]       = useState(false)
   const [gradeMsg,      setGradeMsg]      = useState<string | null>(null)
+
+  // Password modal state
+  const [showPwdModal, setPwdModal] = useState(false)
+  const [pwdCurrent, setPwdCurrent] = useState('')
+  const [pwdNew, setPwdNew] = useState('')
+  const [pwdMsg, setPwdMsg] = useState<string | null>(null)
+  
+  async function handlePasswordChange(e: React.FormEvent) {
+    e.preventDefault()
+    setPwdMsg(null)
+    try {
+      await changePassword({ current_password: pwdCurrent, new_password: pwdNew })
+      setPwdMsg('Password updated successfully!')
+      setTimeout(() => {
+        setPwdModal(false)
+        setPwdCurrent('')
+        setPwdNew('')
+        setPwdMsg(null)
+      }, 2000)
+    } catch (err: any) {
+      setPwdMsg(err.message || 'Failed to update password')
+    }
+  }
+
 
   // ── Guards ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -200,6 +225,13 @@ export default function TeacherDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-slate-600 hidden sm:block">{user?.full_name}</span>
+
+            <button
+              onClick={() => setPwdModal(true)}
+              className="text-xs px-3 py-1.5 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+            >
+              Change Password
+            </button>
             <button
               id="teacher-logout"
               onClick={logout}
@@ -570,6 +602,29 @@ export default function TeacherDashboard() {
           </div>
         )}
       </div>
+
+      {showPwdModal && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg max-w-sm w-full p-6">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Change Password</h2>
+            {pwdMsg && <p className="text-sm font-semibold mb-4 text-blue-600">{pwdMsg}</p>}
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Current Password</label>
+                <input required type="password" value={pwdCurrent} onChange={e => setPwdCurrent(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none shadow-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">New Password</label>
+                <input required type="password" value={pwdNew} onChange={e => setPwdNew(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none shadow-sm" />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setPwdModal(false)} className="px-4 py-2 text-sm font-semibold border border-slate-300 rounded-md text-slate-700 hover:bg-slate-50">Cancel</button>
+                <button type="submit" className="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-md hover:bg-blue-700">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -58,6 +58,7 @@ def create_experiment(
         simulation_type=payload.simulation_type,
         status=payload.status,
         topic=payload.topic,
+        class_level=payload.class_level,
         description=payload.description,
         materials=payload.materials,
         instructions=payload.instructions,
@@ -100,6 +101,10 @@ def list_experiments(
     if _current_user.role == UserRole.student:
         # Students can strictly view published experiments only
         query = query.filter(Experiment.status == ExperimentStatus.published)
+        # Students can only view experiments for their class or unassigned experiments
+        query = query.filter(
+            (Experiment.class_level == _current_user.class_level) | (Experiment.class_level == None) | (Experiment.class_level == "")
+        )
     else:
         if status_filter is not None:
             query = query.filter(Experiment.status == status_filter)
@@ -136,15 +141,18 @@ def get_experiment(
             detail=f"Experiment with id={experiment_id} not found.",
         )
 
-    # Students cannot view draft or archived experiments
-    if (
-        _current_user.role == UserRole.student
-        and experiment.status != ExperimentStatus.published
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Experiment with id={experiment_id} not found.",
-        )
+    # Students cannot view draft or archived experiments or those not in their class
+    if _current_user.role == UserRole.student:
+        if experiment.status != ExperimentStatus.published:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Experiment with id={experiment_id} not found.",
+            )
+        if experiment.class_level and experiment.class_level != "" and experiment.class_level != _current_user.class_level:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Experiment with id={experiment_id} not found for your class.",
+            )
 
     if _current_user.role in (UserRole.teacher, UserRole.admin):
         return ExperimentTeacherResponse.model_validate(experiment)
@@ -306,6 +314,7 @@ def duplicate_experiment(
         simulation_type=experiment.simulation_type,
         status=ExperimentStatus.draft, # Duplicates start as draft
         topic=experiment.topic,
+        class_level=experiment.class_level,
         description=experiment.description,
         materials=experiment.materials,
         instructions=experiment.instructions,

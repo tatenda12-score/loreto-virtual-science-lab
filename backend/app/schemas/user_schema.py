@@ -45,8 +45,8 @@ class UserBase(BaseModel):
     class_level: Optional[str] = Field(
         default=None,
         max_length=50,
-        examples=["SS2"],
-        description="Student class level (e.g. JSS1, SS2). Leave null for staff.",
+        examples=["Form4"],
+        description="Student class level (e.g. Form3, L6). Leave null for staff.",
     )
     subject_code: Optional[str] = Field(
         default=None,
@@ -105,8 +105,8 @@ class UserRegister(BaseModel):
     class_level: Optional[str] = Field(
         default=None,
         max_length=50,
-        examples=["SS2"],
-        description="Student class level (e.g. JSS1, SS2).",
+        examples=["Form4"],
+        description="Student class level (e.g. Form3, L6).",
     )
     gender: Optional[str] = Field(
         default=None,
@@ -260,3 +260,19 @@ class UserInDB(UserResponse):
     """
 
     hashed_password: str
+
+class UserPasswordUpdate(BaseModel):
+    current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def password_complexity(cls, v: str) -> str:
+        if not any(c.isupper() for c in v):
+            raise ValueError("Password must contain at least one uppercase letter.")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("Password must contain at least one digit.")
+        special_chars = set("!@#$%^&*()-_=+[]{}|;:',.<>?/")
+        if not any(c in special_chars for c in v):
+            raise ValueError("Password must contain at least one special character.")
+        return v

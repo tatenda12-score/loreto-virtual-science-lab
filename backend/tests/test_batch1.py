@@ -80,7 +80,7 @@ class TestBatch1(unittest.TestCase):
             email="student@test.com",
             hashed_password=hash_password("Password123!"),
             role=UserRole.student,
-            class_level="SS2",
+            class_level="L6",
             is_active=True,
             is_verified=True,
         )
@@ -130,7 +130,7 @@ class TestBatch1(unittest.TestCase):
             "email": "hacker.admin@test.com",
             "password": "Password123!",
             "role": "admin",
-            "class_level": "SS2",
+            "class_level": "L6",
         }
         res = self.client.post("/api/v1/auth/register", json=payload)
         self.assertEqual(res.status_code, 201)
@@ -320,7 +320,7 @@ class TestBatch1(unittest.TestCase):
         res = self.client.post("/api/v1/submissions/", json=payload, headers=headers)
         self.assertEqual(res.status_code, 201)
         data = res.json()
-        self.assertEqual(data["status"], "submitted")
+        self.assertEqual(data["status"], "graded")
         self.assertEqual(data["final_score"], 100.0)
         self.assertEqual(data["student_id"], self.student_id)
 
