@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createSubmission, type Experiment } from '@/services/api';
 
 interface SimulationProps {
@@ -8,10 +8,10 @@ interface SimulationProps {
 }
 
 export default function MomentsSimulation({ experiment, onClose, onSuccess }: SimulationProps) {
-  const [leftMass, setLeftMass] = useState(1); // kg
-  const [leftDistance, setLeftDistance] = useState(0.4); // m
-  const [rightMass, setRightMass] = useState(1); // kg
-  const [rightDistance, setRightDistance] = useState(0.6); // m
+  const [leftMass, setLeftMass] = useState(1);
+  const [leftDistance, setLeftDistance] = useState(0.4);
+  const [rightMass, setRightMass] = useState(1);
+  const [rightDistance, setRightDistance] = useState(0.6);
   
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,15 +21,14 @@ export default function MomentsSimulation({ experiment, onClose, onSuccess }: Si
     trial2_moment: ''
   });
 
-  const g = 10; // N/kg for simplicity
+  const g = 10;
   const leftForce = leftMass * g;
   const rightForce = rightMass * g;
   const leftMoment = leftForce * leftDistance;
   const rightMoment = rightForce * rightDistance;
   
-  // Calculate rotation angle (purely visual representation of imbalance)
   const maxTilt = 15;
-  const netMoment = rightMoment - leftMoment; // positive means clockwise tilt
+  const netMoment = rightMoment - leftMoment;
   const tiltAngle = Math.max(-maxTilt, Math.min(maxTilt, netMoment * 2));
 
   const handleSubmit = async () => {
@@ -52,58 +51,51 @@ export default function MomentsSimulation({ experiment, onClose, onSuccess }: Si
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'rgba(2,6,23,0.95)', backdropFilter: 'blur(16px)' }}>
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>??</div>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>⚖️</div>
           <div>
             <h2 className="text-base font-bold text-white">{experiment.title}</h2>
-            <p className="text-xs text-slate-400">{experiment.subject} � {experiment.difficulty}</p>
+            <p className="text-xs text-slate-400">{experiment.subject} · {experiment.difficulty}</p>
           </div>
         </div>
         <button onClick={onClose} className="rounded-lg px-3 py-1.5 border border-white/10 text-slate-300 hover:bg-white/5 transition-colors text-sm">
-          ? Close
+          ✕ Close
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* Workspace */}
         <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 flex flex-col items-center relative">
           <h3 className="text-lg font-bold text-indigo-400 mb-6 absolute top-6 left-6">Metre Rule Setup</h3>
           
           <div className="w-full mt-24 relative flex justify-center items-center h-48">
             
-            {/* The Metre Rule Pivot Assembly */}
             <div className="relative w-full max-w-lg flex flex-col items-center">
               
-              {/* The Rule itself */}
               <div 
                 className="w-full h-4 bg-yellow-600 rounded-sm shadow-lg relative border-b-2 border-yellow-800 transition-transform duration-500 ease-out z-10"
-                style={{ transform: \otate(\deg)\ }}
+                style={{ transform: `rotate(${tiltAngle}deg)` }}
               >
-                {/* Markings */}
                 <div className="absolute inset-x-0 bottom-0 h-1 flex justify-between px-2">
                   {[...Array(11)].map((_, i) => (
                     <div key={i} className="w-px h-full bg-yellow-900"></div>
                   ))}
                 </div>
                 
-                {/* Left Mass */}
                 <div 
                   className="absolute bottom-full mb-1 w-8 bg-slate-400 border border-slate-600 rounded-t-sm flex items-center justify-center text-xs font-bold text-slate-900"
-                  style={{ left: \\%\, transform: 'translateX(-50%)', height: \\px\ }}
+                  style={{ left: `${(0.5 - leftDistance) * 100}%`, transform: 'translateX(-50%)', height: `${leftMass * 20}px` }}
                 >
                   {leftMass}kg
                 </div>
 
-                {/* Right Mass */}
                 <div 
                   className="absolute bottom-full mb-1 w-8 bg-slate-400 border border-slate-600 rounded-t-sm flex items-center justify-center text-xs font-bold text-slate-900"
-                  style={{ left: \\%\, transform: 'translateX(-50%)', height: \\px\ }}
+                  style={{ left: `${(0.5 + rightDistance) * 100}%`, transform: 'translateX(-50%)', height: `${rightMass * 20}px` }}
                 >
                   {rightMass}kg
                 </div>
               </div>
 
-              {/* The Pivot */}
               <div className="w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-b-[20px] border-b-slate-500 mt-0 z-0"></div>
               <div className="w-8 h-4 bg-slate-700 rounded-b-sm"></div>
               
@@ -111,7 +103,6 @@ export default function MomentsSimulation({ experiment, onClose, onSuccess }: Si
             
           </div>
           
-          {/* Controls */}
           <div className="w-full grid grid-cols-2 gap-8 mt-12 bg-slate-800/50 p-6 rounded-xl border border-white/5">
             <div>
               <h4 className="text-sm font-bold text-slate-300 mb-4 border-b border-white/10 pb-2">Left Side (Anticlockwise)</h4>
@@ -151,13 +142,12 @@ export default function MomentsSimulation({ experiment, onClose, onSuccess }: Si
           
         </div>
 
-        {/* Observations */}
         <div className="flex flex-col gap-4">
           <div className="bg-slate-900 border border-white/10 rounded-2xl p-6">
             <h3 className="text-lg font-bold text-violet-400 mb-4">Calculations & Report</h3>
             
             <div className="bg-slate-800/80 p-4 rounded-lg mb-6 border border-slate-700 text-sm text-slate-300">
-              <p className="mb-2"><strong className="text-slate-200">Formula:</strong> Moment = Force � Distance</p>
+              <p className="mb-2"><strong className="text-slate-200">Formula:</strong> Moment = Force × Distance</p>
               <p><strong className="text-slate-200">Note:</strong> Assume g = 10 N/kg for Force calculation.</p>
             </div>
 

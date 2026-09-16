@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createSubmission, type Experiment } from '@/services/api';
 
 interface SimulationProps {
@@ -35,26 +35,25 @@ export default function SeparationSimulation({ experiment, onClose, onSuccess }:
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'rgba(2,6,23,0.95)', backdropFilter: 'blur(16px)' }}>
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: 'linear-gradient(135deg, #0ea5e9, #0369a1)' }}>??</div>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: 'linear-gradient(135deg, #0ea5e9, #0369a1)' }}>🧪</div>
           <div>
             <h2 className="text-base font-bold text-white">{experiment.title}</h2>
-            <p className="text-xs text-slate-400">{experiment.subject} � {experiment.difficulty}</p>
+            <p className="text-xs text-slate-400">{experiment.subject} · {experiment.difficulty}</p>
           </div>
         </div>
         <button onClick={onClose} className="rounded-lg px-3 py-1.5 border border-white/10 text-slate-300 hover:bg-white/5 transition-colors text-sm">
-          ? Close
+          ✕ Close
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* Workspace */}
         <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center relative">
           <h3 className="text-lg font-bold text-sky-400 mb-6 absolute top-6 left-6">Chemistry Lab Setup</h3>
           
           {step === 0 && (
             <div className="text-center animate-in fade-in">
-              <div className="w-32 h-32 bg-slate-800 rounded-full flex items-center justify-center text-4xl mb-4 mx-auto border-4 border-slate-700">??</div>
+              <div className="w-32 h-32 bg-slate-800 rounded-full flex items-center justify-center text-4xl mb-4 mx-auto border-4 border-slate-700">🏺</div>
               <h4 className="text-white font-bold mb-2">Mixture: Sand, Salt & Water</h4>
               <p className="text-slate-400 text-sm mb-6 max-w-xs">You have a beaker containing a mixture of insoluble sand and soluble salt dissolved in water.</p>
               <button 
@@ -84,7 +83,7 @@ export default function SeparationSimulation({ experiment, onClose, onSuccess }:
             <div className="text-center animate-in fade-in">
               <div className="w-32 h-32 bg-slate-800 rounded-b-xl flex items-center justify-center text-4xl mb-4 mx-auto border-b-4 border-orange-500 relative">
                 <div className="absolute bottom-0 w-full h-1/2 bg-blue-500/30"></div>
-                <div className="absolute -bottom-6 text-orange-500 text-2xl animate-pulse">??</div>
+                <div className="absolute -bottom-6 text-orange-500 text-2xl animate-pulse">🔥</div>
               </div>
               <h4 className="text-white font-bold mb-2">Step 2: Evaporation</h4>
               <p className="text-slate-400 text-sm mb-6 max-w-xs">Heating the salt water in an evaporating basin. The water evaporates, leaving solid salt crystals behind.</p>
@@ -101,15 +100,15 @@ export default function SeparationSimulation({ experiment, onClose, onSuccess }:
             <div className="text-center animate-in fade-in">
               <div className="flex justify-center gap-4 mb-6">
                 <div className="w-24 h-24 bg-slate-800 rounded-full flex flex-col items-center justify-center border border-slate-600">
-                  <span className="text-2xl">???</span>
+                  <span className="text-2xl">🏜️</span>
                   <span className="text-xs text-slate-400 mt-1">Sand</span>
                 </div>
                 <div className="w-24 h-24 bg-slate-800 rounded-full flex flex-col items-center justify-center border border-slate-600">
-                  <span className="text-2xl">??</span>
+                  <span className="text-2xl">🧂</span>
                   <span className="text-xs text-slate-400 mt-1">Salt</span>
                 </div>
                 <div className="w-24 h-24 bg-slate-800 rounded-full flex flex-col items-center justify-center border border-slate-600">
-                  <span className="text-2xl">??</span>
+                  <span className="text-2xl">💧</span>
                   <span className="text-xs text-slate-400 mt-1">Water vapor</span>
                 </div>
               </div>
@@ -126,7 +125,6 @@ export default function SeparationSimulation({ experiment, onClose, onSuccess }:
 
         </div>
 
-        {/* Observations */}
         <div className="flex flex-col gap-4">
           <div className="bg-slate-900 border border-white/10 rounded-2xl p-6">
             <h3 className="text-lg font-bold text-violet-400 mb-4">Record Methods</h3>

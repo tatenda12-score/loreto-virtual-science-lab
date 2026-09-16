@@ -426,10 +426,6 @@ export async function fetchAuditLogs(skip = 0, limit = 50): Promise<AuditLog[]> 
 export default api
 
 export async function changePassword(data: any): Promise<any> {
-  const response = await fetch(${API_URL}/auth/password, {
-    method: 'PATCH',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(data),
-  })
-  return handleResponse(response)
+  const res = await api.patch('/auth/password', data)
+  return res.data
 }
