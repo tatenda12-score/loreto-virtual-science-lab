@@ -140,7 +140,7 @@ async def unhandled_exception_handler(request, exc: Exception):
     return JSONResponse(
         status_code=500,
         content={
-            "detail": str(exc),
+            "detail": "An unexpected error occurred. Please contact support.",
         },
     )
 
@@ -207,16 +207,8 @@ def fix_enums():
             db.execute(text("ALTER TYPE simulation_type_enum ADD VALUE IF NOT EXISTS 'food_tests';"))
             db.execute(text("ALTER TYPE simulation_type_enum ADD VALUE IF NOT EXISTS 'separation';"))
             db.execute(text("ALTER TYPE simulation_type_enum ADD VALUE IF NOT EXISTS 'moments';"))
-            try:
-                db.execute(text("ALTER TABLE experiments ADD COLUMN IF NOT EXISTS class_level VARCHAR(255);"))
-            except Exception as e:
-                logging.error(f"Error adding column to experiments: {e}")
-            try:
-                db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS class_level VARCHAR(255);"))
-            except Exception as e:
-                logging.error(f"Error adding column to users: {e}")
             db.commit()
-        return {"status": "ok", "message": "Enums and columns updated"}
+        return {"status": "ok", "message": "Enums updated"}
     except Exception as exc:
         logging.error(f"Enum update failed: {exc}")
         return {"status": "error", "detail": str(exc)}
