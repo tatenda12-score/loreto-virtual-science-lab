@@ -12,12 +12,23 @@ This migration:
 
 This is the root-cause fix: the production DB was missing these enum values,
 causing 500 errors when creating L6/Upper6 experiments via the API.
+
+PostgreSQL note
+--------------
+`ALTER TYPE ... ADD VALUE` is PROHIBITED inside a transaction block.
+Alembic wraps every migration in a transaction by default, which causes
+an InternalError (SQLAlchemy code 2j85).
+
+The fix: open a raw DBAPI connection in AUTOCOMMIT mode and run the DDL
+there, then use the normal Alembic context (inside a transaction) for the
+column addition.  This pattern is the standard Alembic recommendation for
+PostgreSQL enum mutations — see:
+https://alembic.sqlalchemy.org/en/latest/api/runtime.html#alembic.runtime.migration.MigrationContext.autocommit_block
 """
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
@@ -44,16 +55,27 @@ def upgrade() -> None:
     bind = op.get_bind()
 
     if bind.dialect.name == "postgresql":
-        # PostgreSQL: ALTER TYPE ... ADD VALUE for each new enum member.
-        # IF NOT EXISTS prevents errors if a partial migration was attempted.
-        for val in NEW_SIM_TYPES:
-            bind.execute(
-                sa.text(f"ALTER TYPE simulation_type_enum ADD VALUE IF NOT EXISTS :val"),
-                {"val": val},
-            )
+        # ----------------------------------------------------------------
+        # ALTER TYPE ... ADD VALUE must NOT run inside a transaction block.
+        # We use Alembic's autocommit_block() context manager which:
+        #   1. COMMITs the current open transaction.
+        #   2. Executes the DDL in AUTOCOMMIT mode.
+        #   3. Resumes normal transactional mode afterwards.
+        # This is the officially supported pattern.
+        # ----------------------------------------------------------------
+        with op.get_context().autocommit_block():
+            conn = op.get_bind()
+            for val in NEW_SIM_TYPES:
+                # Whitelist-only: val comes from the hardcoded list above,
+                # so direct string interpolation is safe here.
+                conn.execute(
+                    sa.text(
+                        f"ALTER TYPE simulation_type_enum ADD VALUE IF NOT EXISTS '{val}'"
+                    )
+                )
 
     # Add class_level column to experiments if it doesn't already exist.
-    # Use a try/except because the column may already exist on some deployments.
+    # batch_alter_table is safe inside a normal transaction.
     try:
         with op.batch_alter_table('experiments', schema=None) as batch_op:
             batch_op.add_column(
@@ -65,17 +87,15 @@ def upgrade() -> None:
                 )
             )
     except Exception:
-        # Column already exists — safe to ignore
+        # Column already exists on some deployments — safe to ignore
         pass
 
 
 def downgrade() -> None:
     # Note: PostgreSQL does not support removing enum values (ALTER TYPE DROP VALUE).
     # The downgrade only removes the class_level column.
-    bind = op.get_bind()
-    if bind.dialect.name == "postgresql":
-        try:
-            with op.batch_alter_table('experiments', schema=None) as batch_op:
-                batch_op.drop_column('class_level')
-        except Exception:
-            pass
+    try:
+        with op.batch_alter_table('experiments', schema=None) as batch_op:
+            batch_op.drop_column('class_level')
+    except Exception:
+        pass
