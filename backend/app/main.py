@@ -49,7 +49,8 @@ async def lifespan(app: FastAPI):
     logger.info(f"   Version     : {settings.APP_VERSION}")
 
     # Seed demo data only in development mode (production should use migrations)
-    if settings.is_development:
+    import os
+    if settings.is_development and not os.environ.get("RENDER"):
         try:
             from scripts.seed import run_seed
             run_seed()
