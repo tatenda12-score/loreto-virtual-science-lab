@@ -210,7 +210,9 @@ export interface ExperimentCreatePayload {
   description:      string
   subject:          'Physics' | 'Chemistry' | 'Biology'
   difficulty?:      'Beginner' | 'Intermediate' | 'Advanced'
-  simulation_type?: 'ohms_law' | 'titration' | 'velocity' | 'ph' | 'microscopy' | 'generic'
+  simulation_type?: 'ohms_law' | 'titration' | 'velocity' | 'ph' | 'food_tests' | 'separation'
+                  | 'moments' | 'enzyme_activity' | 'l6_titration' | 'internal_resistance'
+                  | 'u6_photosynthesis' | 'u6_kinetics' | 'u6_young_modulus' | 'microscopy' | 'generic'
   status?:          'draft' | 'published' | 'archived'
   topic?:           string
   materials?:       string[] | Record<string, unknown>
@@ -223,7 +225,9 @@ export interface Experiment {
   title:           string
   subject:         'Physics' | 'Chemistry' | 'Biology'
   difficulty:      'Beginner' | 'Intermediate' | 'Advanced'
-  simulation_type: 'ohms_law' | 'titration' | 'velocity' | 'ph' | 'microscopy' | 'generic'
+  simulation_type: 'ohms_law' | 'titration' | 'velocity' | 'ph' | 'food_tests' | 'separation'
+                 | 'moments' | 'enzyme_activity' | 'l6_titration' | 'internal_resistance'
+                 | 'u6_photosynthesis' | 'u6_kinetics' | 'u6_young_modulus' | 'microscopy' | 'generic'
   status:          'draft' | 'published' | 'archived'
   topic:           string | null
   description:     string

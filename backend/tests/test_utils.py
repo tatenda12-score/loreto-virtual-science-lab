@@ -27,6 +27,17 @@ TestingSessionLocal = sessionmaker(
 
 
 def init_test_db():
+    """
+    Ensure all ORM tables exist in the test database.
+
+    Uses create_all() only (no drop_all) so that existing test data from a
+    setUpClass fixture is never inadvertently destroyed when a concurrent
+    setUp() in another test class calls clean_test_db().
+
+    If the schema becomes stale (e.g. a new column was added), delete
+    test_loreto.db before running the suite — the file will be recreated
+    with the correct schema on the next run.
+    """
     Base.metadata.create_all(bind=test_engine)
 
 

@@ -516,14 +516,69 @@ def _upsert_users(db) -> dict[str, User]:
 
 
 def _upsert_experiments(db, teacher: User) -> list[Experiment]:
-    """Create experiments that don't already exist. Returns list of Experiment objects."""
+    """
+    Create or reconcile experiments against the canonical seed definition.
+
+    For NEW experiments: creates the full record.
+
+    For EXISTING experiments (matched by title): reconciles the following
+    canonical configuration fields to match the seed definition:
+      - class_level       (the level filter — the key field for access control)
+      - status            (published/draft/archived)
+      - simulation_type   (which interactive component to render)
+      - subject           (Physics / Chemistry / Biology)
+      - difficulty        (Beginner / Intermediate / Advanced)
+      - topic             (curriculum topic label)
+      - description       (overview paragraph)
+      - materials         (apparatus list)
+      - instructions      (step-by-step list)
+      - parameters        (grading constants and expected values)
+
+    Fields deliberately NOT updated (user-generated / relational data):
+      - id                (primary key — never changed)
+      - created_by        (original author — preserved)
+      - created_at        (original timestamp — preserved)
+      - submissions       (student work — never overwritten)
+
+    Returns list of Experiment objects.
+    """
+    # Canonical fields to reconcile on existing records.
+    CANONICAL_FIELDS = (
+        "class_level",
+        "status",
+        "simulation_type",
+        "subject",
+        "difficulty",
+        "topic",
+        "description",
+        "materials",
+        "instructions",
+        "parameters",
+    )
+
     experiments: list[Experiment] = []
     for data in SEED_EXPERIMENTS:
         existing = (
             db.query(Experiment).filter(Experiment.title == data["title"]).first()
         )
         if existing:
-            print(f"  [SKIP] Experiment already exists: '{data['title']}'")
+            # Reconcile canonical fields — detect and report any differences.
+            changed_fields: list[str] = []
+            for field in CANONICAL_FIELDS:
+                seed_val = data.get(field)
+                current_val = getattr(existing, field, None)
+                if current_val != seed_val:
+                    setattr(existing, field, seed_val)
+                    changed_fields.append(f"{field}: {current_val!r} -> {seed_val!r}")
+
+            if changed_fields:
+                db.flush()
+                print(
+                    f"  [FIX]  Reconciled experiment '{data['title']}': "
+                    + ", ".join(changed_fields)
+                )
+            else:
+                print(f"  [OK]   Experiment already canonical: '{data['title']}'")
             experiments.append(existing)
         else:
             exp = Experiment(**data, created_by=teacher.id)

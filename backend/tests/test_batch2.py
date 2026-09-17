@@ -117,7 +117,18 @@ class TestBatch2(unittest.TestCase):
         self.assertEqual([e.value for e in Difficulty], ["Beginner", "Intermediate", "Advanced"])
         self.assertEqual(
             [e.value for e in SimulationType],
-            ["ohms_law", "titration", "velocity", "ph", "generic"],
+            [
+                # Original types
+                "ohms_law", "titration", "velocity", "ph",
+                # Form3 types added with class_level support
+                "food_tests", "separation", "moments",
+                # L6 types
+                "enzyme_activity", "l6_titration", "internal_resistance",
+                # Upper6 types
+                "u6_photosynthesis", "u6_kinetics", "u6_young_modulus",
+                # Fallback
+                "generic",
+            ],
         )
         self.assertEqual([e.value for e in ExperimentStatus], ["draft", "published", "archived"])
         self.assertEqual([e.value for e in SubmissionStatus], ["draft", "submitted", "graded"])
@@ -195,11 +206,14 @@ class TestBatch2(unittest.TestCase):
         teacher = users_map["teacher@loreto.edu.ng"]
         experiments = _upsert_experiments(db, teacher)
         self.assertTrue(len(experiments) >= 2)
+        # All SimulationType enum values the seed uses
+        valid_types = set(SimulationType)
         for exp in experiments:
             self.assertIn(exp.status, [ExperimentStatus.published, ExperimentStatus.draft])
             self.assertIn(
                 exp.simulation_type,
-                [SimulationType.ohms_law, SimulationType.titration, SimulationType.generic],
+                valid_types,
+                f"Unexpected simulation_type '{exp.simulation_type}' for '{exp.title}'",
             )
         db.close()
 

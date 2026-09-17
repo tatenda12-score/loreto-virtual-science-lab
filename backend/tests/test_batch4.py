@@ -82,6 +82,11 @@ class TestBatch4WorkflowAndSecurity(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         Base.metadata.drop_all(bind=cls.engine)
+        # Restore the shared test-database override so that subsequent test
+        # classes (e.g. test_level_isolation, test_security) use test_loreto.db
+        # and not the now-dropped in-memory engine created by this class.
+        from tests.test_utils import override_get_db
+        app.dependency_overrides[get_db] = override_get_db
 
     def setUp(self):
         self.db = self.TestingSessionLocal()
