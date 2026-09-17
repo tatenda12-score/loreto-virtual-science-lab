@@ -13,7 +13,7 @@ interface ExperimentBuilderProps {
   onCancel: () => void
 }
 
-type SimulationType = 'ohms_law' | 'titration' | 'velocity' | 'ph' | 'microscopy' | 'generic'
+type SimulationType = Experiment['simulation_type']
 
 interface MaterialItem {
   id: number
@@ -247,10 +247,19 @@ export default function ExperimentBuilder({ experiment, onSave, onCancel }: Expe
                   >
                     <option value="ohms_law">Ohm's Law</option>
                     <option value="titration">Acid-Base Titration</option>
-                    <option value="velocity">Velocity & Motion</option>
-                    <option value="ph">pH Scale</option>
+                    <option value="velocity">Velocity Simulation</option>
+                    <option value="ph">pH Scale Simulation</option>
+                    <option value="food_tests">Food Tests</option>
+                    <option value="separation">Separation of a Mixture</option>
+                    <option value="moments">Principle of Moments</option>
+                    <option value="enzyme_activity">Enzyme Activity</option>
+                    <option value="l6_titration">L6 Titration</option>
+                    <option value="internal_resistance">Internal Resistance</option>
+                    <option value="u6_photosynthesis">U6 Photosynthesis</option>
+                    <option value="u6_kinetics">U6 Kinetics</option>
+                    <option value="u6_young_modulus">U6 Young Modulus</option>
                     <option value="microscopy">Virtual Microscopy</option>
-                    <option value="generic">Generic Experiment</option>
+                    <option value="generic">Generic (Instructions Only)</option>
                   </select>
                 </div>
               </div>
