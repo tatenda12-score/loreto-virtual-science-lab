@@ -36,7 +36,18 @@ is_sqlite = db_url.startswith("sqlite")
 # ---------------------------------------------------------------------------
 # Engine Configuration
 # ---------------------------------------------------------------------------
-connect_args = {"check_same_thread": False} if is_sqlite else {}
+connect_args: dict = {}
+
+if is_sqlite:
+    connect_args["check_same_thread"] = False
+else:
+    # Hard connection timeout: fail fast if DB is unreachable (e.g. Render cold-start)
+    # instead of hanging indefinitely.
+    connect_args["connect_timeout"] = 10
+    # Render PostgreSQL requires SSL. Only inject sslmode if not already in the URL
+    # (user may have embedded ?sslmode=require in their DATABASE_URL already).
+    if "sslmode" not in db_url:
+        connect_args["sslmode"] = "require"
 
 engine_kwargs: dict = {
     "connect_args": connect_args,
@@ -50,6 +61,7 @@ if not is_sqlite:
     engine_kwargs["pool_size"] = 10
     engine_kwargs["max_overflow"] = 20
     engine_kwargs["pool_recycle"] = 1800
+    engine_kwargs["pool_timeout"] = 30   # don't block forever waiting for a pool slot
 
 engine = create_engine(db_url, **engine_kwargs)
 

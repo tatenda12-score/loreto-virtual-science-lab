@@ -83,20 +83,36 @@ def run_migrations_online() -> None:
     In this scenario we need to create an Engine
     and associate a connection with the context.
 
+    connect_timeout=10 is set so that if the database is unreachable
+    (e.g. Render cold-start), alembic fails fast with a clear error
+    instead of hanging indefinitely.
     """
+    url = get_url()
+    is_postgres = url.startswith("postgresql")
+
+    # Build connect_args: always set a hard connection timeout so Alembic
+    # fails quickly (not hang for minutes) when the DB is unreachable.
+    connect_args: dict = {"connect_timeout": 10} if is_postgres else {}
+
+    # For production PostgreSQL on Render, sslmode is required.
+    # We only inject it if the URL doesn't already contain sslmode.
+    if is_postgres and "sslmode" not in url:
+        connect_args["sslmode"] = "require"
+
     # Override sqlalchemy.url with our settings value so alembic.ini
     # placeholder is never accidentally used in production.
-    config.set_main_option("sqlalchemy.url", get_url())
+    config.set_main_option("sqlalchemy.url", url)
 
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, 
+            connection=connection,
             target_metadata=target_metadata,
             compare_type=True,
             render_as_batch=True,
