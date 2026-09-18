@@ -53,8 +53,16 @@ NEW_SIM_TYPES = [
 
 def upgrade() -> None:
     # Add class_level column to experiments if it doesn't already exist.
-    # batch_alter_table is safe inside a normal transaction.
-    try:
+    # Check existence using inspector to avoid transaction-aborting exceptions
+    bind = op.get_bind()
+    insp = sa.inspect(bind)
+    has_column = False
+    for col in insp.get_columns('experiments'):
+        if col['name'] == 'class_level':
+            has_column = True
+            break
+            
+    if not has_column:
         with op.batch_alter_table('experiments', schema=None) as batch_op:
             batch_op.add_column(
                 sa.Column(
@@ -64,16 +72,19 @@ def upgrade() -> None:
                     comment="Target class level (e.g., Form3, L6). Null means available to all.",
                 )
             )
-    except Exception:
-        # Column already exists on some deployments — safe to ignore
-        pass
 
 
 def downgrade() -> None:
     # Note: PostgreSQL does not support removing enum values (ALTER TYPE DROP VALUE).
     # The downgrade only removes the class_level column.
-    try:
+    bind = op.get_bind()
+    insp = sa.inspect(bind)
+    has_column = False
+    for col in insp.get_columns('experiments'):
+        if col['name'] == 'class_level':
+            has_column = True
+            break
+            
+    if has_column:
         with op.batch_alter_table('experiments', schema=None) as batch_op:
             batch_op.drop_column('class_level')
-    except Exception:
-        pass
