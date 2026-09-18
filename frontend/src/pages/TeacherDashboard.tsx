@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import ExperimentBuilder from '@/components/experiments/ExperimentBuilder'
+import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard'
 import {
   fetchExperiments,
   fetchSubmissionsForExperiment,
@@ -45,7 +46,7 @@ const EXP_STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   archived:  { label: 'Archived',  cls: 'bg-amber-50  text-amber-700  border-amber-200' },
 }
 
-type TabType = 'experiments' | 'submissions'
+type TabType = 'experiments' | 'submissions' | 'analytics'
 type StatusFilter = 'all' | 'draft' | 'published' | 'archived'
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -76,11 +77,16 @@ export default function TeacherDashboard() {
   const [showPwdModal, setPwdModal] = useState(false)
   const [pwdCurrent, setPwdCurrent] = useState('')
   const [pwdNew, setPwdNew] = useState('')
+  const [pwdConfirm, setPwdConfirm] = useState('')
   const [pwdMsg, setPwdMsg] = useState<string | null>(null)
   
   async function handlePasswordChange(e: React.FormEvent) {
     e.preventDefault()
     setPwdMsg(null)
+    if (pwdNew !== pwdConfirm) {
+      setPwdMsg('New passwords do not match.')
+      return
+    }
     try {
       await changePassword({ current_password: pwdCurrent, new_password: pwdNew })
       setPwdMsg('Password updated successfully!')
@@ -88,6 +94,7 @@ export default function TeacherDashboard() {
         setPwdModal(false)
         setPwdCurrent('')
         setPwdNew('')
+        setPwdConfirm('')
         setPwdMsg(null)
       }, 2000)
     } catch (err: any) {
@@ -253,6 +260,7 @@ export default function TeacherDashboard() {
               <h1 className="text-2xl font-bold text-slate-900">{user?.full_name ?? 'Teacher'}</h1>
               <p className="text-slate-600 text-sm mt-0.5">
                 {user?.subject_code ? `Subject: ${user.subject_code}` : 'All subjects'}
+                {user?.class_level ? ` • Assigned Class: ${user.class_level}` : ''}
               </p>
             </div>
             <div className="flex gap-4">
@@ -293,6 +301,16 @@ export default function TeacherDashboard() {
             }`}
           >
             📋 Submissions
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`text-sm font-semibold pb-3 transition-colors border-b-2 ${
+              activeTab === 'analytics'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+            }`}
+          >
+            📈 Analytics
           </button>
         </div>
 
@@ -601,6 +619,16 @@ export default function TeacherDashboard() {
             </div>
           </div>
         )}
+
+        {/* ──────────────────────────────────────────────────────────────── */}
+        {/*  Analytics Tab                                                   */}
+        {/* ──────────────────────────────────────────────────────────────── */}
+        {activeTab === 'analytics' && (
+          <div className="space-y-4">
+            <AnalyticsDashboard isTeacher={true} teacherClassLevel={user?.class_level} />
+          </div>
+        )}
+
       </div>
 
       {showPwdModal && (
@@ -616,6 +644,10 @@ export default function TeacherDashboard() {
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">New Password</label>
                 <input required type="password" value={pwdNew} onChange={e => setPwdNew(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none shadow-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Confirm New Password</label>
+                <input required type="password" value={pwdConfirm} onChange={e => setPwdConfirm(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none shadow-sm" />
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setPwdModal(false)} className="px-4 py-2 text-sm font-semibold border border-slate-300 rounded-md text-slate-700 hover:bg-slate-50">Cancel</button>

@@ -1,0 +1,27 @@
+# Render Deployment Debugging Log
+
+This file records the errors encountered during deployment to Render and their solutions for future reference.
+
+## 1. Internal Database Connection `sslmode` Issue
+
+**The Error:** 
+When the backend service (on Render) attempts to connect to the managed PostgreSQL database (also on Render) using the Internal Database URL over Render's private network, it was failing to connect or timing out.
+
+**The Cause:** 
+The database configuration in `backend/app/db/database.py` and `backend/alembic/env.py` had logic that forcibly added `sslmode=require` to the connection string. Render's internal connections reject SSL connections because the internal network is inherently secure, causing the connection attempts to fail.
+
+**The Solution:** 
+We completely removed the hardcoded `sslmode="require"` injection from both `backend/app/db/database.py` and `backend/alembic/env.py`. This allows the app to correctly use Render's internal connection defaults without forcing SSL.
+
+---
+
+## 2. Alembic Migration Transaction Poisoning
+
+**The Error:** 
+The deployment failed during the database migration step. Specifically, a migration script (`a3f8c9d2e1b5`) attempting to add new values to a PostgreSQL Enum using `ALTER TYPE ADD VALUE` caused the database connection to lock up.
+
+**The Cause:** 
+PostgreSQL is extremely strict about running `ALTER TYPE` inside a transaction block. The migration attempted to bypass this by using an autocommit block, but it still failed and caused "transaction poisoning" - a state where the database connection locks up and aborts all subsequent queries until restarted.
+
+**The Solution:** 
+We removed the `ALTER TYPE` block completely from the `a3f8c9d2e1b5_add_simulation_types_and_class_level.py` migration script. If enum values need to be added, they should be managed via standard SQLAlchemy auto-creation or updated directly if strictly necessary, without relying on unstable `ALTER TYPE` workarounds inside the migration files on Render.

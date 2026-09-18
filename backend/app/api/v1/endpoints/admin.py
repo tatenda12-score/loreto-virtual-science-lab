@@ -7,6 +7,7 @@ All endpoints require ``role=admin`` — students and teachers receive HTTP 403.
 """
 
 from typing import Optional
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -24,6 +25,13 @@ from app.schemas.admin_schema import (
 )
 from app.schemas.user_schema import UserResponse
 from app.schemas.audit_schema import AuditLogResponse
+from app.schemas.analytics_schema import (
+    StudentPerformanceResponse,
+    AnalyticsSummary,
+    StudentPerformanceRecord,
+    ExperimentPerformance,
+    PaginationMeta
+)
 from app.models.audit import AuditLog
 from app.services.audit_service import log_action
 
@@ -262,3 +270,30 @@ def delete_user(
     db.delete(user)
     db.commit()
     return None
+
+# ---------------------------------------------------------------------------
+# GET /admin/analytics/student-performance — Analytics Dashboard
+# ---------------------------------------------------------------------------
+@router.get("/analytics/student-performance", response_model=StudentPerformanceResponse)
+def get_student_performance_analytics(
+    class_level: Optional[str] = Query(None, description="Filter by class level"),
+    subject: Optional[str] = Query(None, description="Filter by subject"),
+    period: Optional[str] = Query(None, description="All Time, This Term, Last 30 Days"),
+    sort: Optional[str] = Query(None, description="highest, lowest, most_improved, lowest_completion"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    _current_user: User = _admin_dep,
+) -> StudentPerformanceResponse:
+    """Analytics dashboard data for student performance."""
+    from app.services.analytics_service import get_performance_analytics
+    
+    return get_performance_analytics(
+        db=db,
+        class_level=class_level,
+        subject=subject,
+        period=period,
+        sort=sort,
+        page=page,
+        page_size=page_size
+    )

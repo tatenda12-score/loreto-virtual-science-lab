@@ -204,6 +204,17 @@ def get_submission(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not allowed to view another student's submission.",
         )
+        
+    # Teachers may only view submissions from their assigned class
+    if (
+        current_user.role == UserRole.teacher
+        and submission.student.class_level != current_user.class_level
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to view submissions for this student.",
+        )
+        
     return submission  # type: ignore[return-value]
 
 

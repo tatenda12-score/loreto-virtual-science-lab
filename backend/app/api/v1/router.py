@@ -49,3 +49,11 @@ v1_router.include_router(
     prefix="/admin",
     tags=["Admin"],
 )
+
+# ── Teacher ──────────────────────────────────────────────────────────────────
+from app.api.v1.endpoints.teacher import router as teacher_router
+v1_router.include_router(
+    teacher_router,
+    prefix="/teacher",
+    tags=["Teacher"],
+)

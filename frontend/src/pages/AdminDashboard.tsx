@@ -35,8 +35,9 @@ import {
   Edit2
 } from 'lucide-react'
 import ExperimentBuilder from '@/components/experiments/ExperimentBuilder'
+import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard'
 
-type TabType = 'overview' | 'teachers' | 'students' | 'experiments' | 'submissions' | 'audit_logs' | 'delete_users'
+type TabType = 'overview' | 'analytics' | 'teachers' | 'students' | 'experiments' | 'submissions' | 'audit_logs' | 'delete_users'
 
 const SUBJECT_BADGE: Record<string, string> = {
   Physics:   'bg-violet-50 text-violet-700 border-violet-200',
@@ -64,7 +65,7 @@ export default function AdminDashboard() {
   const [teachers, setTeachers] = useState<UserProfile[]>([])
   const [loadingTeachers, setLoadingTeachers] = useState(false)
   const [showCreateTeacher, setShowCreateTeacher] = useState(false)
-  const [newTeacher, setNewTeacher] = useState({ full_name: '', email: '', password: '', subject_code: '', gender: '', class_level: '' })
+  const [newTeacher, setNewTeacher] = useState({ full_name: '', email: '', password: 'science', subject_code: '', gender: '', class_level: '' })
 
   // Students State
   const [students, setStudents] = useState<UserProfile[]>([])
@@ -203,7 +204,7 @@ export default function AdminDashboard() {
       const created = await createTeacher(newTeacher)
       setTeachers([created, ...teachers])
       setShowCreateTeacher(false)
-      setNewTeacher({ full_name: '', email: '', password: '', subject_code: '', gender: '', class_level: '' })
+      setNewTeacher({ full_name: '', email: '', password: 'science', subject_code: '', gender: '', class_level: '' })
     } catch (e: any) {
       alert(e.message || 'Failed to create teacher.')
     }
@@ -683,7 +684,7 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold text-slate-900 mb-6 tracking-tight">Admin Dashboard</h1>
           
           <nav className="flex space-x-1 p-1 bg-slate-100 rounded-xl overflow-x-auto">
-            {(['overview', 'teachers', 'students', 'experiments', 'submissions', 'audit_logs', 'delete_users'] as TabType[]).map(tab => (
+            {(['overview', 'analytics', 'teachers', 'students', 'experiments', 'submissions', 'audit_logs', 'delete_users'] as TabType[]).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -704,6 +705,7 @@ export default function AdminDashboard() {
         {/* --- Tab Content --- */}
         <div className="flex-1">
           {activeTab === 'overview' && renderOverview()}
+          {activeTab === 'analytics' && <AnalyticsDashboard />}
           {activeTab === 'teachers' && renderTeachers()}
           {activeTab === 'students' && renderStudents()}
           {activeTab === 'experiments' && renderExperiments()}

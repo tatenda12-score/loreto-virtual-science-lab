@@ -254,6 +254,53 @@ export interface Submission {
   submitted_at:          string | null
   created_at:            string
   updated_at:            string
+  student?:              UserProfile
+  experiment?:           Experiment
+}
+
+export interface ExperimentPerformance {
+  experiment_id: number;
+  title: string;
+  subject: string;
+  score: number;
+  status: string;
+  submitted_at: string | null;
+  graded_at: string | null;
+}
+
+export interface StudentPerformanceRecord {
+  student_id: number;
+  name: string;
+  email: string;
+  class_level: string | null;
+  average_score: number | null;
+  completed: number;
+  available: number;
+  completion_rate: number;
+  performance: string;
+  trend: string;
+  experiments: ExperimentPerformance[];
+}
+
+export interface AnalyticsSummary {
+  average_score: number | null;
+  assessed_students: number;
+  strong_performance: number;
+  needs_attention: number;
+  at_risk: number;
+}
+
+export interface PaginationMeta {
+  page: number;
+  page_size: number;
+  total_students: number;
+  total_pages: number;
+}
+
+export interface StudentPerformanceResponse {
+  summary: AnalyticsSummary;
+  students: StudentPerformanceRecord[];
+  pagination: PaginationMeta;
 }
 
 export interface AuditLog {
@@ -430,6 +477,33 @@ export async function fetchAuditLogs(skip = 0, limit = 50): Promise<AuditLog[]> 
   const res = await api.get<AuditLog[]>('/admin/audit-logs', {
     params: { skip, limit }
   })
+  return res.data
+}
+
+// ── Admin Analytics ───────────────────────────────────────────────────────
+
+export async function fetchStudentPerformanceAnalytics(params?: {
+  class_level?: string;
+  subject?: string;
+  period?: string;
+  sort?: string;
+  page?: number;
+  page_size?: number;
+}): Promise<StudentPerformanceResponse> {
+  const res = await api.get<StudentPerformanceResponse>('/admin/analytics/student-performance', { params })
+  return res.data
+}
+
+// ── Teacher Analytics ───────────────────────────────────────────────────────
+
+export async function fetchTeacherPerformanceAnalytics(params?: {
+  subject?: string;
+  period?: string;
+  sort?: string;
+  page?: number;
+  page_size?: number;
+}): Promise<StudentPerformanceResponse> {
+  const res = await api.get<StudentPerformanceResponse>('/teacher/analytics/class-performance', { params })
   return res.data
 }
 
