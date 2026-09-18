@@ -94,11 +94,6 @@ def run_migrations_online() -> None:
     # fails quickly (not hang for minutes) when the DB is unreachable.
     connect_args: dict = {"connect_timeout": 10} if is_postgres else {}
 
-    # For production PostgreSQL on Render, sslmode is required.
-    # We only inject it if the URL doesn't already contain sslmode.
-    if is_postgres and "sslmode" not in url:
-        connect_args["sslmode"] = "require"
-
     # Override sqlalchemy.url with our settings value so alembic.ini
     # placeholder is never accidentally used in production.
     config.set_main_option("sqlalchemy.url", url)

@@ -44,10 +44,6 @@ else:
     # Hard connection timeout: fail fast if DB is unreachable (e.g. Render cold-start)
     # instead of hanging indefinitely.
     connect_args["connect_timeout"] = 10
-    # Render PostgreSQL requires SSL. Only inject sslmode if not already in the URL
-    # (user may have embedded ?sslmode=require in their DATABASE_URL already).
-    if "sslmode" not in db_url:
-        connect_args["sslmode"] = "require"
 
 engine_kwargs: dict = {
     "connect_args": connect_args,
