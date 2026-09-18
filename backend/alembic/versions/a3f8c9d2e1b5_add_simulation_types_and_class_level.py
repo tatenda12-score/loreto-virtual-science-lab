@@ -52,28 +52,6 @@ NEW_SIM_TYPES = [
 
 
 def upgrade() -> None:
-    bind = op.get_bind()
-
-    if bind.dialect.name == "postgresql":
-        # ----------------------------------------------------------------
-        # ALTER TYPE ... ADD VALUE must NOT run inside a transaction block.
-        # We use Alembic's autocommit_block() context manager which:
-        #   1. COMMITs the current open transaction.
-        #   2. Executes the DDL in AUTOCOMMIT mode.
-        #   3. Resumes normal transactional mode afterwards.
-        # This is the officially supported pattern.
-        # ----------------------------------------------------------------
-        with op.get_context().autocommit_block():
-            conn = op.get_bind()
-            for val in NEW_SIM_TYPES:
-                # Whitelist-only: val comes from the hardcoded list above,
-                # so direct string interpolation is safe here.
-                conn.execute(
-                    sa.text(
-                        f"ALTER TYPE simulation_type_enum ADD VALUE IF NOT EXISTS '{val}'"
-                    )
-                )
-
     # Add class_level column to experiments if it doesn't already exist.
     # batch_alter_table is safe inside a normal transaction.
     try:
