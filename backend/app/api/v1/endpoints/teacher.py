@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import require_roles
 from app.db.database import get_db
 from app.models.user import User, UserRole
+from app.schemas.user_schema import UserResponse
 from app.schemas.analytics_schema import StudentPerformanceResponse
 from app.services.analytics_service import get_performance_analytics
 
@@ -47,3 +48,27 @@ def get_teacher_class_analytics(
         page=page,
         page_size=page_size
     )
+
+
+@router.get("/students", response_model=list[UserResponse])
+def get_teacher_students(
+    db: Session = Depends(get_db),
+    current_user: User = _teacher_dep,
+) -> list[UserResponse]:
+    """
+    Returns all active students in the teacher's assigned class.
+    """
+    if not current_user.class_level:
+        return []
+
+    students = (
+        db.query(User)
+        .filter(
+            User.role == UserRole.student,
+            User.class_level == current_user.class_level,
+            User.is_active == True
+        )
+        .order_by(User.full_name.asc())
+        .all()
+    )
+    return [UserResponse.model_validate(s) for s in students]

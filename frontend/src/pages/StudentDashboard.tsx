@@ -251,12 +251,7 @@ export default function StudentDashboard() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div 
-      className="min-h-screen text-slate-900 bg-cover bg-center bg-fixed relative"
-      style={{ backgroundImage: "url('/images/science_bg.png')" }}
-    >
-      {/* Dynamic blurred overlay for readability - reduced blur & opacity */}
-      <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-[2px] pointer-events-none"></div>
+    <div className="min-h-screen bg-slate-50 text-slate-900">
 
       {/* ── Toast ── */}
       {toast && (
@@ -293,7 +288,7 @@ export default function StudentDashboard() {
       {/* ── Main Content Wrapper ── */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* ── Top nav ── */}
-        <nav className="bg-white/80 backdrop-blur-md border-b border-white/20 sticky top-0 z-40 shadow-sm">
+        <nav className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm bg-gradient-to-br from-blue-600 to-indigo-600 shadow-md text-white">🔬</div>
@@ -302,7 +297,7 @@ export default function StudentDashboard() {
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-slate-700 hidden sm:block">{user?.email}</span>
               <button id="student-logout" onClick={logout}
-                      className="text-xs font-semibold px-4 py-2 rounded-md bg-white/50 border border-slate-300 text-slate-700 hover:bg-white hover:shadow-sm transition-all">
+                      className="text-xs font-semibold px-4 py-2 rounded-md bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:shadow-sm transition-all">
                 Sign out
               </button>
             </div>
@@ -312,18 +307,18 @@ export default function StudentDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-10 flex-1 w-full">
 
           {/* ── Welcome banner ── */}
-          <div className="rounded-2xl p-8 bg-white/40 backdrop-blur-md border border-white/40 shadow-xl overflow-hidden relative">
+          <div className="rounded-xl p-8 bg-white border border-slate-200 shadow-sm relative overflow-hidden">
             {/* Subtle decorative glowing orb */}
-            <div className="absolute top-[-50%] right-[-10%] w-64 h-64 bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute top-[-50%] right-[-10%] w-64 h-64 bg-blue-50 rounded-full blur-3xl pointer-events-none"></div>
             
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
               <div>
-                <p className="text-blue-700 font-semibold text-sm mb-1 uppercase tracking-wider">Student Dashboard</p>
+                <p className="text-blue-600 font-semibold text-sm mb-1 uppercase tracking-wider">Student Dashboard</p>
                 <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{user?.full_name ?? 'Student'}</h1>
-                <p className="text-slate-700 text-sm mt-1 font-medium">Class: {user?.class_level ?? '—'}</p>
+                <p className="text-slate-500 text-sm mt-1 font-medium">Class: {user?.class_level ?? '—'}</p>
               </div>
               
-              <div className="flex gap-6 flex-wrap bg-white/50 p-4 rounded-xl border border-white/50 shadow-sm backdrop-blur-md">
+              <div className="flex gap-6 flex-wrap bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
                 {[
                   { value: experiments.length, label: 'Available',   color: 'text-slate-900'       },
                   { value: submissions.length, label: 'Submissions', color: 'text-slate-900'       },
@@ -346,13 +341,13 @@ export default function StudentDashboard() {
           {/* ── Experiments grid ── */}
           <section>
             <div className="flex items-center gap-2 mb-6">
-              <h2 className="text-xl font-bold text-white drop-shadow-md">Available Experiments</h2>
-              <div className="h-[2px] flex-1 bg-gradient-to-r from-white/30 to-transparent ml-4"></div>
+              <h2 className="text-xl font-bold text-slate-800">Available Experiments</h2>
+              <div className="h-[2px] flex-1 bg-gradient-to-r from-slate-200 to-transparent ml-4"></div>
             </div>
             {loadingExp ? (
-              <div className="text-white/70 text-sm font-medium animate-pulse">Loading experiments...</div>
+              <div className="text-slate-500 text-sm font-medium animate-pulse">Loading experiments...</div>
             ) : filteredExperiments.length === 0 ? (
-              <div className="text-white/70 text-sm font-medium">No experiments available yet.</div>
+              <div className="text-slate-500 text-sm font-medium">No experiments available yet.</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredExperiments.map((exp) => {
@@ -360,7 +355,7 @@ export default function StudentDashboard() {
                   return (
                     <div
                       key={exp.id}
-                      className="rounded-2xl border border-white/20 bg-white/50 backdrop-blur-sm overflow-hidden hover:shadow-2xl hover:bg-white/70 transition-all duration-300 group cursor-pointer relative flex flex-col transform hover:-translate-y-1"
+                      className="rounded-xl border border-slate-200 bg-white overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative flex flex-col"
                       onClick={() => openExperiment(exp)}
                     >
                       <div className="p-6 flex-1 flex flex-col relative z-10">
@@ -406,28 +401,28 @@ export default function StudentDashboard() {
           <section>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-2 flex-1">
-                <h2 className="text-xl font-bold text-white drop-shadow-md">My Submissions</h2>
-                <div className="h-[2px] flex-1 bg-gradient-to-r from-white/30 to-transparent ml-4"></div>
+                <h2 className="text-xl font-bold text-slate-800">My Submissions</h2>
+                <div className="h-[2px] flex-1 bg-gradient-to-r from-slate-200 to-transparent ml-4"></div>
               </div>
               <button
                 onClick={refreshSubmissions}
-                className="text-xs font-bold px-4 py-2 rounded-lg bg-white/20 text-white border border-white/30 hover:bg-white/30 backdrop-blur-sm transition-all flex-shrink-0"
+                className="text-xs font-bold px-4 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-all flex-shrink-0"
               >
                 ↻ Refresh
               </button>
             </div>
 
             {loadingSub ? (
-              <div className="text-white/70 text-sm font-medium animate-pulse">Loading submissions...</div>
+              <div className="text-slate-500 text-sm font-medium animate-pulse">Loading submissions...</div>
             ) : submissions.length === 0 ? (
-              <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md p-10 text-center text-white/80 text-sm font-medium shadow-inner">
+              <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-slate-500 text-sm font-medium shadow-sm">
                 No submissions yet. Launch an experiment above to get started.
               </div>
             ) : (
-              <div className="rounded-2xl border border-white/30 bg-white/60 backdrop-blur-md overflow-hidden shadow-2xl">
+              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-slate-900/5 text-slate-600 text-xs uppercase tracking-widest border-b border-black/5 font-bold">
+                    <thead className="bg-slate-50 text-slate-600 text-xs uppercase tracking-widest border-b border-slate-200 font-bold">
                       <tr>
                         <th className="px-6 py-4 text-left">Experiment</th>
                         <th className="px-6 py-4 text-left">Status</th>
@@ -436,12 +431,12 @@ export default function StudentDashboard() {
                         <th className="px-6 py-4 text-left hidden lg:table-cell">Date</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-black/5">
+                    <tbody className="divide-y divide-slate-100">
                       {submissions.map((sub) => {
                         const badge = STATUS_BADGE[sub.status]
                         const exp   = experiments.find((e) => e.id === sub.experiment_id)
                         return (
-                          <tr key={sub.id} className="hover:bg-white/60 transition-colors">
+                          <tr key={sub.id} className="hover:bg-slate-50 transition-colors">
                             <td className="px-6 py-4 text-slate-900 font-bold">
                               {exp?.title ?? `Experiment #${sub.experiment_id}`}
                             </td>

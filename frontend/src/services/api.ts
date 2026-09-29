@@ -474,6 +474,11 @@ export async function gradeSubmission(
 
 // ── Admin Logs ────────────────────────────────────────────────────────────
 
+export const fetchClassStudents = async (): Promise<UserProfile[]> => {
+  const res = await api.get<UserProfile[]>('/teacher/students')
+  return res.data
+}
+
 export async function fetchAuditLogs(skip = 0, limit = 50): Promise<AuditLog[]> {
   const res = await api.get<AuditLog[]>('/admin/audit-logs', {
     params: { skip, limit }
