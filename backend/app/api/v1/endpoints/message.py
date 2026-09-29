@@ -12,7 +12,7 @@ from app.api.deps import get_current_user
 
 router = APIRouter()
 
-@router.post("/", response_model=MessageResponse)
+@router.post("", response_model=MessageResponse)
 def send_message(
     msg_in: MessageCreate,
     db: Session = Depends(get_db),
@@ -32,7 +32,7 @@ def send_message(
     db.refresh(new_msg)
     return new_msg
 
-@router.get("/", response_model=List[MessageResponse])
+@router.get("", response_model=List[MessageResponse])
 def get_messages(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
