@@ -260,24 +260,27 @@ export default function AdminDashboard() {
     if (!stats) return <div className="text-red-400">Failed to load stats.</div>
 
     const statCards = [
-      { label: 'Total Students', value: stats.total_students, icon: <GraduationCap className="w-5 h-5 text-violet-400" /> },
-      { label: 'Total Teachers', value: stats.total_teachers, icon: <Users className="w-5 h-5 text-cyan-400" /> },
-      { label: 'Total Experiments', value: stats.total_experiments, icon: <FlaskConical className="w-5 h-5 text-emerald-400" /> },
-      { label: 'Published Exp.', value: stats.published_experiments, icon: <CheckCircle2 className="w-5 h-5 text-green-400" /> },
-      { label: 'Total Submissions', value: stats.total_submissions, icon: <FileText className="w-5 h-5 text-amber-400" /> },
-      { label: 'Pending Grading', value: stats.pending_submissions, icon: <Settings className="w-5 h-5 text-rose-400" /> },
+      { label: 'Total Students', value: stats.total_students, icon: <GraduationCap className="w-6 h-6 text-white" />, color: 'from-violet-500 to-indigo-600', shadow: 'shadow-indigo-500/30' },
+      { label: 'Total Teachers', value: stats.total_teachers, icon: <Users className="w-6 h-6 text-white" />, color: 'from-cyan-400 to-blue-600', shadow: 'shadow-blue-500/30' },
+      { label: 'Total Experiments', value: stats.total_experiments, icon: <FlaskConical className="w-6 h-6 text-white" />, color: 'from-emerald-400 to-teal-600', shadow: 'shadow-teal-500/30' },
+      { label: 'Published Exp.', value: stats.published_experiments, icon: <CheckCircle2 className="w-6 h-6 text-white" />, color: 'from-green-400 to-emerald-600', shadow: 'shadow-green-500/30' },
+      { label: 'Total Submissions', value: stats.total_submissions, icon: <FileText className="w-6 h-6 text-white" />, color: 'from-amber-400 to-orange-500', shadow: 'shadow-orange-500/30' },
+      { label: 'Pending Grading', value: stats.pending_submissions, icon: <Settings className="w-6 h-6 text-white" />, color: 'from-rose-400 to-red-600', shadow: 'shadow-red-500/30' },
     ]
 
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
         {statCards.map((s, i) => (
-          <Card key={i} className="bg-white border-slate-200 shadow-sm text-slate-900">
-            <CardContent className="p-6 flex items-center justify-between">
+          <Card key={i} className="relative overflow-hidden bg-white/70 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-300 group">
+            {/* 3D Glass Highlight */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-white/20 to-transparent opacity-50 pointer-events-none"></div>
+            
+            <CardContent className="p-8 flex items-center justify-between relative z-10">
               <div>
-                <p className="text-sm text-slate-500 font-medium uppercase tracking-wide">{s.label}</p>
-                <p className="text-3xl font-bold mt-2 text-slate-900">{s.value}</p>
+                <p className="text-xs text-slate-500 font-black uppercase tracking-widest mb-1">{s.label}</p>
+                <p className="text-4xl font-black text-slate-800 drop-shadow-sm">{s.value}</p>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+              <div className={`p-4 rounded-2xl bg-gradient-to-br ${s.color} shadow-lg ${s.shadow} transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 border border-white/20`}>
                 {s.icon}
               </div>
             </CardContent>
@@ -660,24 +663,29 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-100">
+    <div className="min-h-screen bg-slate-100 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(216,226,248,0.8),rgba(255,255,255,0))] text-slate-900 flex flex-col font-sans selection:bg-blue-200">
       {/* --- Top Nav --- */}
-      <nav className="border-b border-slate-200 bg-white sticky top-0 z-40 shadow-sm">
+      <nav className="sticky top-0 z-40 bg-white/70 backdrop-blur-xl border-b border-white/50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm bg-blue-600 text-white font-bold shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-black shadow-[0_0_15px_rgba(59,130,246,0.5)] border border-blue-400/50">
               🔬
             </div>
-            <span className="font-bold text-slate-900 tracking-tight">Loreto Science Lab</span>
-            <span className="text-xs px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 font-semibold uppercase tracking-wide">
-              Admin
-            </span>
+            <div>
+              <span className="font-extrabold text-slate-900 tracking-tight text-lg drop-shadow-sm">Loreto Science Lab</span>
+              <span className="ml-3 text-[10px] px-2.5 py-1 rounded-md bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black uppercase tracking-widest shadow-md">
+                Admin Center
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm font-semibold text-slate-600 hidden sm:block">{user?.full_name}</span>
+            <div className="hidden sm:flex flex-col items-end mr-2">
+              <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">System Administrator</span>
+              <span className="text-sm font-extrabold text-slate-800">{user?.full_name}</span>
+            </div>
             <button
               onClick={logout}
-              className="text-xs font-semibold px-3 py-1.5 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm transition-colors"
+              className="text-xs font-bold px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-slate-900 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 shadow-sm"
             >
               Sign out
             </button>
@@ -685,22 +693,25 @@ export default function AdminDashboard() {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full flex-1 flex flex-col">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 w-full flex-1 flex flex-col">
         {/* --- Header & Tabs --- */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-6 tracking-tight">Admin Dashboard</h1>
+        <div className="mb-10 relative">
+          <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute top-0 right-10 w-32 h-32 bg-purple-400/20 rounded-full blur-3xl pointer-events-none"></div>
           
-          <nav className="flex space-x-1 p-1 bg-slate-100 rounded-xl overflow-x-auto">
+          <h1 className="text-4xl font-black text-slate-900 mb-8 tracking-tight drop-shadow-sm relative z-10">Admin Dashboard</h1>
+          
+          <nav className="flex space-x-2 p-1.5 bg-white/60 backdrop-blur-md rounded-2xl overflow-x-auto shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] border border-white relative z-10">
             {(['overview', 'analytics', 'teachers', 'students', 'experiments', 'submissions', 'audit_logs', 'delete_users'] as TabType[]).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                className={`px-5 py-2.5 text-sm font-bold rounded-xl transition-all duration-300 whitespace-nowrap ${
                   activeTab === tab
                     ? tab === 'delete_users'
-                      ? 'bg-red-600 text-white shadow-sm'
-                      : 'bg-white text-blue-700 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                      ? 'bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/30 scale-105'
+                      : 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-105'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/80 hover:shadow-sm'
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1).replace('_', ' ')}
