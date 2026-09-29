@@ -13,10 +13,12 @@
  */
 
 import { useEffect, useState } from 'react'
+import NotificationBell from '@/components/messages/NotificationBell'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import ExperimentBuilder from '@/components/experiments/ExperimentBuilder'
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard'
+import NotoriousStudents from '@/components/teacher/NotoriousStudents'
 import {
   fetchExperiments,
   fetchSubmissionsForExperiment,
@@ -48,7 +50,7 @@ const EXP_STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   archived:  { label: 'Archived',  cls: 'bg-amber-50  text-amber-700  border-amber-200' },
 }
 
-type TabType = 'experiments' | 'submissions' | 'analytics'
+type TabType = 'experiments' | 'submissions' | 'analytics' | 'notorious_students'
 type StatusFilter = 'all' | 'draft' | 'published' | 'archived'
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -235,6 +237,7 @@ export default function TeacherDashboard() {
             </span>
           </div>
           <div className="flex items-center gap-4">
+            <NotificationBell />
             <span className="text-sm font-medium text-slate-700 hidden sm:block">{user?.full_name}</span>
 
             <button
@@ -315,6 +318,16 @@ export default function TeacherDashboard() {
             }`}
           >
             📈 Analytics
+          </button>
+          <button
+            onClick={() => setActiveTab('notorious_students')}
+            className={`text-sm font-bold pb-3 transition-colors border-b-2 ${
+              activeTab === 'notorious_students'
+                ? 'border-blue-600 text-blue-700'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-400'
+            }`}
+          >
+            ⚠️ Notorious Students
           </button>
         </div>
 
@@ -670,6 +683,15 @@ export default function TeacherDashboard() {
         {activeTab === 'analytics' && (
           <div className="space-y-4">
             <AnalyticsDashboard isTeacher={true} teacherClassLevel={user?.class_level} />
+          </div>
+        )}
+
+        {/* ──────────────────────────────────────────────────────────────── */}
+        {/*  Notorious Students Tab                                          */}
+        {/* ──────────────────────────────────────────────────────────────── */}
+        {activeTab === 'notorious_students' && (
+          <div className="space-y-4">
+            <NotoriousStudents />
           </div>
         )}
 

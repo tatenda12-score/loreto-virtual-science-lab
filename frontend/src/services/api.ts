@@ -513,9 +513,48 @@ export async function fetchTeacherPerformanceAnalytics(params?: {
   return res.data
 }
 
-export default api
-
 export async function changePassword(data: any): Promise<any> {
   const res = await api.patch('/auth/password', data)
   return res.data
 }
+
+// ── Messages ───────────────────────────────────────────────────────────────
+
+export interface Message {
+  id: number;
+  sender_id: number;
+  receiver_id: number;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+  sender?: UserProfile;
+  receiver?: UserProfile;
+}
+
+export async function fetchMessages(): Promise<Message[]> {
+  const res = await api.get<Message[]>('/messages')
+  return res.data
+}
+
+export async function fetchUnreadMessageCount(): Promise<number> {
+  const res = await api.get<{count: number}>('/messages/unread_count')
+  return res.data.count
+}
+
+export async function searchUsersForMessaging(q: string): Promise<UserProfile[]> {
+  const res = await api.get<UserProfile[]>('/messages/users/search', { params: { q } })
+  return res.data
+}
+
+export async function sendMessage(receiver_id: number, content: string): Promise<Message> {
+  const res = await api.post<Message>('/messages', { receiver_id, content })
+  return res.data
+}
+
+export async function markMessageAsRead(id: number): Promise<Message> {
+  const res = await api.put<Message>(`/messages/${id}/read`)
+  return res.data
+}
+
+// Ensure api is exported last if it was at the end, but actually it's fine here.
+export default api;

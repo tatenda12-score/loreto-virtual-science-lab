@@ -57,3 +57,11 @@ v1_router.include_router(
     prefix="/teacher",
     tags=["Teacher"],
 )
+
+# ── Messages ─────────────────────────────────────────────────────────────────
+from app.api.v1.endpoints.message import router as message_router
+v1_router.include_router(
+    message_router,
+    prefix="/messages",
+    tags=["Messages"],
+)

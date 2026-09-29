@@ -9,6 +9,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react'
+import NotificationBell from '@/components/messages/NotificationBell'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import {
@@ -324,6 +325,7 @@ export default function StudentDashboard() {
               <span className="font-semibold text-slate-900">Virtual Science Lab</span>
             </div>
             <div className="flex items-center gap-4">
+              <NotificationBell />
               <span className="text-sm font-medium text-slate-700 hidden sm:block">{user?.email}</span>
               <button id="student-logout" onClick={logout}
                       className="text-xs font-semibold px-4 py-2 rounded-md bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:shadow-sm transition-all">

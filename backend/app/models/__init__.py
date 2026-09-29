@@ -11,6 +11,7 @@ from .user import User, UserRole
 from .experiment import Experiment, ExperimentStatus, SimulationType, Subject, Difficulty
 from .submission import Submission, SubmissionStatus
 from .audit import AuditLog
+from .message import Message
 
 __all__ = [
     "User",
@@ -23,4 +24,5 @@ __all__ = [
     "Submission",
     "SubmissionStatus",
     "AuditLog",
+    "Message",
 ]

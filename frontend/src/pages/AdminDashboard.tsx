@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import NotificationBell from '@/components/messages/NotificationBell'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import {
@@ -679,6 +680,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <NotificationBell />
             <div className="hidden sm:flex flex-col items-end mr-2">
               <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">System Administrator</span>
               <span className="text-sm font-extrabold text-slate-800">{user?.full_name}</span>
