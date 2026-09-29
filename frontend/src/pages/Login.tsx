@@ -56,7 +56,7 @@ export default function Login() {
   return (
     <div 
       className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-950 bg-cover bg-center"
-      style={{ backgroundImage: 'url(/lab-bg.jpg)' }}
+      style={{ backgroundImage: 'url(/loreto-school-bg.jpg)' }}
     >
       {/* ── Dark Overlay to maintain glassmorphism contrast ── */}
       <div className="absolute inset-0 bg-slate-950/80 mix-blend-multiply" />
@@ -73,8 +73,12 @@ export default function Login() {
       </div>
 
       {/* ── Login card ── */}
-      <div className="relative z-10 w-full max-w-md mx-4">
-        <div className="rounded-xl border border-slate-200 bg-white shadow-xl p-8">
+      <div className="relative z-10 w-full max-w-md mx-4 perspective-1000">
+        <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-8 transform transition-all hover:scale-[1.02] hover:rotate-1 duration-500 relative overflow-hidden">
+          {/* 3D highlights */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-black/20 to-transparent"></div>
+          <div className="absolute top-0 bottom-0 left-0 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
 
           {/* Logo + heading */}
           <div className="flex flex-col items-center mb-8">
@@ -84,10 +88,10 @@ export default function Login() {
                       d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
               </svg>
             </div>
-            <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+            <h1 className="text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">
               Virtual Science Lab
             </h1>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-slate-300 mt-1 font-medium tracking-wide drop-shadow">
               Loreto High School
             </p>
           </div>
@@ -95,7 +99,7 @@ export default function Login() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700" htmlFor="email">
+              <label className="text-sm font-medium text-slate-100 drop-shadow-sm" htmlFor="email">
                 Email address
               </label>
               <input
@@ -106,16 +110,16 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@loreto.edu.ng"
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 text-sm shadow-sm outline-none transition-all focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20"
+                className="w-full rounded-xl border border-white/20 bg-black/20 px-4 py-3 text-white placeholder-slate-400 text-sm shadow-inner outline-none transition-all focus:border-blue-400 focus:bg-black/40 focus:ring-2 focus:ring-blue-400/50 backdrop-blur-sm"
               />
             </div>
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-slate-700" htmlFor="password">
+                <label className="text-sm font-medium text-slate-100 drop-shadow-sm" htmlFor="password">
                   Password
                 </label>
-                <Link to="#" className="text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors">
+                <Link to="#" className="text-xs font-medium text-blue-300 hover:text-blue-200 transition-colors drop-shadow-sm">
                   Forgot password?
                 </Link>
               </div>
@@ -127,7 +131,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 text-sm shadow-sm outline-none transition-all focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20"
+                className="w-full rounded-xl border border-white/20 bg-black/20 px-4 py-3 text-white placeholder-slate-400 text-sm shadow-inner outline-none transition-all focus:border-blue-400 focus:bg-black/40 focus:ring-2 focus:ring-blue-400/50 backdrop-blur-sm"
               />
             </div>
 
@@ -152,7 +156,7 @@ export default function Login() {
               id="login-submit"
               type="submit"
               disabled={loading}
-              className="w-full rounded-md py-2 px-4 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+              className="w-full rounded-xl py-3 px-4 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_10px_20px_rgba(37,99,235,0.3)] hover:shadow-[0_15px_25px_rgba(37,99,235,0.5)] transform hover:-translate-y-1 active:translate-y-0"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -167,10 +171,10 @@ export default function Login() {
           </form>
 
           {/* Register link */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-slate-500">
+          <div className="mt-6 text-center relative z-10">
+            <p className="text-sm text-slate-300 drop-shadow-sm">
               New student?{' '}
-              <Link to="/register" className="font-semibold text-slate-900 hover:underline transition-all">
+              <Link to="/register" className="font-bold text-blue-300 hover:text-blue-200 hover:underline transition-all">
                 Create an account
               </Link>
             </p>
