@@ -23,6 +23,17 @@ export default function MessagesSlideOver({ isOpen, onClose }: { isOpen: boolean
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery.length >= 1) {
+        searchUsersForMessaging(searchQuery).then(setSearchResults).catch(console.error);
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
   const loadMessages = async () => {
     setLoading(true);
     try {
@@ -41,15 +52,10 @@ export default function MessagesSlideOver({ isOpen, onClose }: { isOpen: boolean
     }
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery) return;
-    try {
-      const res = await searchUsersForMessaging(searchQuery);
-      setSearchResults(res);
-    } catch (e) {
-      console.error(e);
-    }
+  const handleReply = (otherUser: UserProfile) => {
+    setSelectedUser(otherUser);
+    setMessageContent('');
+    setActiveTab('compose');
   };
 
   const handleSend = async (e: React.FormEvent) => {
@@ -142,6 +148,16 @@ export default function MessagesSlideOver({ isOpen, onClose }: { isOpen: boolean
                           )}
                         </div>
                       )}
+                      {isReceived && otherUser && (
+                        <div className="mt-2 flex justify-end">
+                          <button 
+                            onClick={() => handleReply(otherUser)}
+                            className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors"
+                          >
+                            Reply
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )
                 })
@@ -151,7 +167,7 @@ export default function MessagesSlideOver({ isOpen, onClose }: { isOpen: boolean
             <div className="p-4 flex flex-col h-full">
               {!selectedUser ? (
                 <div className="space-y-4">
-                  <form onSubmit={handleSearch} className="flex gap-2">
+                  <div className="flex gap-2">
                     <input 
                       type="text" 
                       placeholder="Search name or email..." 
@@ -159,10 +175,7 @@ export default function MessagesSlideOver({ isOpen, onClose }: { isOpen: boolean
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                    <button type="submit" className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 shadow-sm">
-                      <Search className="w-5 h-5" />
-                    </button>
-                  </form>
+                  </div>
                   
                   <div className="space-y-2">
                     {searchResults.map(u => (

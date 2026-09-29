@@ -87,7 +87,7 @@ def search_users_for_messaging(
        - Student: can search their teachers and admins.
        For simplicity here, we allow searching anyone with a limit.
     """
-    if not q or len(q) < 2:
+    if not q or len(q) < 1:
         return []
     
     query = db.query(User).filter(
