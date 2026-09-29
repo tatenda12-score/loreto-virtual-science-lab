@@ -71,7 +71,7 @@ function FloatingBubbles() {
     )
   })
 
-  return <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">{bubbles}</div>
+  return <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">{bubbles}</div>
 }
 
 // ── Toast component ──────────────────────────────────────────────────────────
