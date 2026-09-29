@@ -8,7 +8,7 @@ from app.models.user import User, UserRole
 from app.models.message import Message
 from app.schemas.message_schema import MessageCreate, MessageResponse, UnreadCountResponse
 from app.schemas.user_schema import UserResponse
-from app.api.dependencies import get_current_user
+from app.api.deps import get_current_user
 
 router = APIRouter()
 

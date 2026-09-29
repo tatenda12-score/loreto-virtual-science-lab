@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Message, fetchMessages, sendMessage, searchUsersForMessaging, markMessageAsRead, UserProfile } from '@/services/api';
+import { fetchMessages, sendMessage, searchUsersForMessaging, markMessageAsRead } from '@/services/api';
+import type { Message, UserProfile } from '@/services/api';
 import { X, Send, UserSearch, Search, CheckCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
