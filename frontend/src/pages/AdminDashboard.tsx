@@ -65,6 +65,7 @@ export default function AdminDashboard() {
   const [teachers, setTeachers] = useState<UserProfile[]>([])
   const [loadingTeachers, setLoadingTeachers] = useState(false)
   const [showCreateTeacher, setShowCreateTeacher] = useState(false)
+  const [isCreatingTeacher, setIsCreatingTeacher] = useState(false)
   const [newTeacher, setNewTeacher] = useState({ full_name: '', email: '', password: 'science', subject_code: '', gender: '', class_level: '' })
 
   // Students State
@@ -200,13 +201,17 @@ export default function AdminDashboard() {
 
   async function handleCreateTeacher(e: React.FormEvent) {
     e.preventDefault()
+    if (isCreatingTeacher) return
+    setIsCreatingTeacher(true)
     try {
       const created = await createTeacher(newTeacher)
       setTeachers([created, ...teachers])
       setShowCreateTeacher(false)
       setNewTeacher({ full_name: '', email: '', password: 'science', subject_code: '', gender: '', class_level: '' })
     } catch (e: any) {
-      alert(e.message || 'Failed to create teacher.')
+      alert(e.response?.data?.detail || e.message || 'Failed to create teacher.')
+    } finally {
+      setIsCreatingTeacher(false)
     }
   }
 
@@ -317,7 +322,9 @@ export default function AdminDashboard() {
                 </select>
                 <div className="flex justify-end gap-3 sm:col-span-2 mt-2">
                   <Button type="button" variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm" onClick={() => setShowCreateTeacher(false)}>Cancel</Button>
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">Save Teacher</Button>
+                  <Button type="submit" disabled={isCreatingTeacher} className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                    {isCreatingTeacher ? 'Saving...' : 'Save Teacher'}
+                  </Button>
                 </div>
               </form>
             </CardContent>
