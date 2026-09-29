@@ -91,8 +91,11 @@ export default function Login() {
             <h1 className="text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">
               Virtual Science Lab
             </h1>
-            <p className="text-sm text-slate-300 mt-1 font-medium tracking-wide drop-shadow">
+            <p className="text-sm text-slate-300 mt-2 font-bold tracking-wide drop-shadow uppercase">
               Loreto High School
+            </p>
+            <p className="text-xs text-slate-400 mt-1 font-medium tracking-wider drop-shadow italic">
+              Brothers of the Sacred Heart
             </p>
           </div>
 
