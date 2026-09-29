@@ -46,6 +46,34 @@ const DIFF_BADGE: Record<string, string> = {
 }
 
 
+
+// ── Floating Bubbles Component ───────────────────────────────────────────────
+function FloatingBubbles() {
+  // Generate a random array of bubbles once
+  const bubbles = Array.from({ length: 15 }).map((_, i) => {
+    const size = Math.random() * 40 + 10 // 10px to 50px
+    const left = Math.random() * 100 // 0% to 100%
+    const animDuration = Math.random() * 15 + 10 // 10s to 25s
+    const animDelay = Math.random() * 10 // 0s to 10s
+
+    return (
+      <div
+        key={i}
+        className="bubble"
+        style={{
+          width: `${size}px`,
+          height: `${size}px`,
+          left: `${left}%`,
+          animationDuration: `${animDuration}s`,
+          animationDelay: `${animDelay}s`,
+        }}
+      />
+    )
+  })
+
+  return <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">{bubbles}</div>
+}
+
 // ── Toast component ──────────────────────────────────────────────────────────
 function Toast({
   message,
@@ -251,7 +279,8 @@ export default function StudentDashboard() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900 relative">
+      <FloatingBubbles />
 
       {/* ── Toast ── */}
       {toast && (
