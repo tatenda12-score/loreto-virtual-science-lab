@@ -674,7 +674,6 @@ export default function TeacherDashboard() {
         )}
 
       </div>
-      </div>
 
       {showPwdModal && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
