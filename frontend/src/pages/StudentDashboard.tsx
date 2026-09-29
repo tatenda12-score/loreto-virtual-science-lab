@@ -251,203 +251,228 @@ export default function StudentDashboard() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div 
+      className="min-h-screen text-slate-900 bg-cover bg-center bg-fixed relative"
+      style={{ backgroundImage: "url('/images/science_bg.png')" }}
+    >
+      {/* Dynamic blurred overlay for readability */}
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[4px] pointer-events-none"></div>
 
       {/* ── Toast ── */}
       {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+        <div className="relative z-50">
+          <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+        </div>
       )}
 
       {/* ── Modals ── */}
-      {activeExp && (() => {
-        const SimulationComponent = SimulationRegistry[activeExp.simulation_type]
-        if (SimulationComponent) {
-          return (
-            <SimulationComponent
-              experiment={activeExp}
-              onClose={closeModal}
-              onSuccess={handleSimulationSuccess}
-            />
-          )
-        }
-        return (
-          <GenericSubmitModal
-            experiment={activeExp}
-            onClose={closeModal}
-            onSuccess={handleGenericSuccess}
-          />
-        )
-      })()}
-
-      {/* ── Top nav ── */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm bg-slate-900 text-white">🔬</div>
-            <span className="font-semibold text-slate-900">Virtual Science Lab</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-600 hidden sm:block">{user?.email}</span>
-            <button id="student-logout" onClick={logout}
-                    className="text-xs px-3 py-1.5 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
-              Sign out
-            </button>
-          </div>
+      {activeExp && (
+        <div className="relative z-50">
+          {(() => {
+            const SimulationComponent = SimulationRegistry[activeExp.simulation_type]
+            if (SimulationComponent) {
+              return (
+                <SimulationComponent
+                  experiment={activeExp}
+                  onClose={closeModal}
+                  onSuccess={handleSimulationSuccess}
+                />
+              )
+            }
+            return (
+              <GenericSubmitModal
+                experiment={activeExp}
+                onClose={closeModal}
+                onSuccess={handleGenericSuccess}
+              />
+            )
+          })()}
         </div>
-      </nav>
+      )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-10">
-
-        {/* ── Welcome banner ── */}
-        <div className="rounded-xl p-6 bg-white border border-slate-200 shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <p className="text-slate-500 text-sm mb-1">Student Dashboard</p>
-              <h1 className="text-2xl font-bold text-slate-900">{user?.full_name ?? 'Student'}</h1>
-              <p className="text-slate-600 text-sm mt-0.5">Class: {user?.class_level ?? '—'}</p>
+      {/* ── Main Content Wrapper ── */}
+      <div className="relative z-10 min-h-screen flex flex-col">
+        {/* ── Top nav ── */}
+        <nav className="bg-white/80 backdrop-blur-md border-b border-white/20 sticky top-0 z-40 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm bg-gradient-to-br from-blue-600 to-indigo-600 shadow-md text-white">🔬</div>
+              <span className="font-semibold text-slate-900">Virtual Science Lab</span>
             </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-slate-700 hidden sm:block">{user?.email}</span>
+              <button id="student-logout" onClick={logout}
+                      className="text-xs font-semibold px-4 py-2 rounded-md bg-white/50 border border-slate-300 text-slate-700 hover:bg-white hover:shadow-sm transition-all">
+                Sign out
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-10 flex-1 w-full">
+
+          {/* ── Welcome banner ── */}
+          <div className="rounded-2xl p-8 bg-white/70 backdrop-blur-lg border border-white/40 shadow-xl overflow-hidden relative">
+            {/* Subtle decorative glowing orb */}
+            <div className="absolute top-[-50%] right-[-10%] w-64 h-64 bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
             
-            <div className="flex gap-4 flex-wrap">
-              {[
-                { value: experiments.length, label: 'Available',   color: 'text-slate-900'       },
-                { value: submissions.length, label: 'Submissions', color: 'text-slate-900'       },
-                { value: gradedSubs.length,  label: 'Graded',      color: 'text-slate-900'       },
-                {
-                  value: avgScore !== null ? `${avgScore}%` : '—',
-                  label: 'Avg Score',
-                  color: avgScore !== null && avgScore >= 70 ? 'text-green-600' : 'text-amber-600',
-                },
-              ].map(({ value, label, color }) => (
-                <div key={label} className="min-w-[90px]">
-                  <p className={`text-2xl font-bold ${color}`}>{value}</p>
-                  <p className="text-xs text-slate-500 mt-0.5 uppercase tracking-wide font-medium">{label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Experiments grid ── */}
-        <section>
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Available Experiments</h2>
-          {loadingExp ? (
-            <div className="text-slate-500 text-sm">Loading experiments...</div>
-          ) : filteredExperiments.length === 0 ? (
-            <div className="text-slate-500 text-sm">No experiments available yet.</div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredExperiments.map((exp) => {
-                const isInteractive = SimulationRegistry[exp.simulation_type] !== undefined;
-                return (
-                  <div
-                    key={exp.id}
-                    className="rounded-xl border border-slate-200 bg-white overflow-hidden hover:shadow-md transition-shadow group cursor-pointer relative flex flex-col"
-                    onClick={() => openExperiment(exp)}
-                  >
-                    <div className="p-5 flex-1 flex flex-col">
-                      <div className="flex items-start justify-between mb-3">
-                        <span className="text-2xl">{SUBJECT_ICONS[exp.subject] ?? '🔬'}</span>
-                        <div className="flex flex-col items-end gap-2">
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFF_BADGE[exp.difficulty] ?? ''}`}>
-                            {exp.difficulty}
-                          </span>
-                          {isInteractive && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wide">
-                              Interactive
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <h3 className="font-semibold text-slate-900 text-sm leading-snug mb-1 group-hover:text-blue-600 transition-colors">
-                        {exp.title}
-                      </h3>
-                      {exp.topic && (
-                        <p className="text-xs text-slate-500 mb-2 font-medium">{exp.topic}</p>
-                      )}
-                      <p className="text-xs text-slate-600 mb-4 line-clamp-2 flex-1">{exp.description}</p>
-                      <button
-                        id={`launch-exp-${exp.id}`}
-                        className={`w-full rounded-md py-1.5 text-xs font-semibold transition-colors mt-auto ${
-                          isInteractive
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
-                            : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 shadow-sm'
-                        }`}
-                      >
-                        {isInteractive ? 'Launch Simulation →' : 'Launch Experiment →'}
-                      </button>
-                    </div>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
+              <div>
+                <p className="text-blue-700 font-semibold text-sm mb-1 uppercase tracking-wider">Student Dashboard</p>
+                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{user?.full_name ?? 'Student'}</h1>
+                <p className="text-slate-700 text-sm mt-1 font-medium">Class: {user?.class_level ?? '—'}</p>
+              </div>
+              
+              <div className="flex gap-6 flex-wrap bg-white/50 p-4 rounded-xl border border-white/50 shadow-sm backdrop-blur-md">
+                {[
+                  { value: experiments.length, label: 'Available',   color: 'text-slate-900'       },
+                  { value: submissions.length, label: 'Submissions', color: 'text-slate-900'       },
+                  { value: gradedSubs.length,  label: 'Graded',      color: 'text-slate-900'       },
+                  {
+                    value: avgScore !== null ? `${avgScore}%` : '—',
+                    label: 'Avg Score',
+                    color: avgScore !== null && avgScore >= 70 ? 'text-green-600' : 'text-amber-600',
+                  },
+                ].map(({ value, label, color }) => (
+                  <div key={label} className="min-w-[80px]">
+                    <p className={`text-3xl font-black ${color}`}>{value}</p>
+                    <p className="text-[10px] text-slate-600 mt-1 uppercase tracking-widest font-bold">{label}</p>
                   </div>
-                )
-              })}
+                ))}
+              </div>
             </div>
-          )}
-        </section>
-
-        {/* ── Submissions table ── */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">My Submissions</h2>
-            <button
-              onClick={refreshSubmissions}
-              className="text-xs px-3 py-1.5 rounded-md border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors shadow-sm bg-white"
-            >
-              ↻ Refresh
-            </button>
           </div>
 
-          {loadingSub ? (
-            <div className="text-slate-500 text-sm">Loading submissions...</div>
-          ) : submissions.length === 0 ? (
-            <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500 text-sm shadow-sm">
-              No submissions yet. Launch an experiment above to get started.
+          {/* ── Experiments grid ── */}
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <h2 className="text-xl font-bold text-white drop-shadow-md">Available Experiments</h2>
+              <div className="h-[2px] flex-1 bg-gradient-to-r from-white/30 to-transparent ml-4"></div>
             </div>
-          ) : (
-            <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide border-b border-slate-200">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-medium">Experiment</th>
-                    <th className="px-4 py-3 text-left font-medium">Status</th>
-                    <th className="px-4 py-3 text-right font-medium">Score</th>
-                    <th className="px-4 py-3 text-left hidden md:table-cell font-medium">Feedback</th>
-                    <th className="px-4 py-3 text-left hidden lg:table-cell font-medium">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {submissions.map((sub) => {
-                    const badge = STATUS_BADGE[sub.status]
-                    const exp   = experiments.find((e) => e.id === sub.experiment_id)
-                    return (
-                      <tr key={sub.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 text-slate-900 font-medium">
-                          {exp?.title ?? `Experiment #${sub.experiment_id}`}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${badge.cls}`}>
-                            {badge.label}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono font-medium">
-                          {sub.automatic_score !== null
-                            ? <span className={sub.automatic_score >= 70 ? 'text-green-600' : 'text-amber-600'}>
-                                {sub.automatic_score}/100
+            {loadingExp ? (
+              <div className="text-white/70 text-sm font-medium animate-pulse">Loading experiments...</div>
+            ) : filteredExperiments.length === 0 ? (
+              <div className="text-white/70 text-sm font-medium">No experiments available yet.</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredExperiments.map((exp) => {
+                  const isInteractive = SimulationRegistry[exp.simulation_type] !== undefined;
+                  return (
+                    <div
+                      key={exp.id}
+                      className="rounded-2xl border border-white/20 bg-white/80 backdrop-blur-md overflow-hidden hover:shadow-2xl hover:bg-white/95 transition-all duration-300 group cursor-pointer relative flex flex-col transform hover:-translate-y-1"
+                      onClick={() => openExperiment(exp)}
+                    >
+                      <div className="p-6 flex-1 flex flex-col relative z-10">
+                        <div className="flex items-start justify-between mb-4">
+                          <span className="text-3xl drop-shadow-sm">{SUBJECT_ICONS[exp.subject] ?? '🔬'}</span>
+                          <div className="flex flex-col items-end gap-2">
+                            <span className={`text-[10px] px-2.5 py-1 rounded-md font-bold uppercase tracking-wider shadow-sm ${DIFF_BADGE[exp.difficulty] ?? ''}`}>
+                              {exp.difficulty}
+                            </span>
+                            {isInteractive && (
+                              <span className="text-[10px] px-2.5 py-1 rounded-md font-bold bg-blue-100 text-blue-700 border border-blue-200 uppercase tracking-wider shadow-sm">
+                                Interactive
                               </span>
-                            : <span className="text-slate-400">—</span>}
-                        </td>
-                        <td className="px-4 py-3 text-slate-600 hidden md:table-cell max-w-xs truncate">
-                          {sub.teacher_feedback ?? '—'}
-                        </td>
-                        <td className="px-4 py-3 text-slate-500 hidden lg:table-cell text-xs">
-                          {sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : '—'}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+                            )}
+                          </div>
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 leading-tight mb-2 group-hover:text-blue-600 transition-colors">
+                          {exp.title}
+                        </h3>
+                        {exp.topic && (
+                          <p className="text-xs text-blue-600/80 mb-3 font-semibold uppercase tracking-wide">{exp.topic}</p>
+                        )}
+                        <p className="text-sm text-slate-600 mb-6 line-clamp-3 flex-1 leading-relaxed">{exp.description}</p>
+                        <button
+                          id={`launch-exp-${exp.id}`}
+                          className={`w-full rounded-xl py-2.5 text-sm font-bold transition-all mt-auto shadow-sm ${
+                            isInteractive
+                              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 hover:shadow-md'
+                              : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-blue-400 hover:text-blue-700'
+                          }`}
+                        >
+                          {isInteractive ? 'Launch Simulation →' : 'Launch Experiment →'}
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* ── Submissions table ── */}
+          <section>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-2 flex-1">
+                <h2 className="text-xl font-bold text-white drop-shadow-md">My Submissions</h2>
+                <div className="h-[2px] flex-1 bg-gradient-to-r from-white/30 to-transparent ml-4"></div>
+              </div>
+              <button
+                onClick={refreshSubmissions}
+                className="text-xs font-bold px-4 py-2 rounded-lg bg-white/20 text-white border border-white/30 hover:bg-white/30 backdrop-blur-sm transition-all flex-shrink-0"
+              >
+                ↻ Refresh
+              </button>
             </div>
-          )}
-        </section>
+
+            {loadingSub ? (
+              <div className="text-white/70 text-sm font-medium animate-pulse">Loading submissions...</div>
+            ) : submissions.length === 0 ? (
+              <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md p-10 text-center text-white/80 text-sm font-medium shadow-inner">
+                No submissions yet. Launch an experiment above to get started.
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-white/30 bg-white/85 backdrop-blur-xl overflow-hidden shadow-2xl">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-900/5 text-slate-600 text-xs uppercase tracking-widest border-b border-black/5 font-bold">
+                      <tr>
+                        <th className="px-6 py-4 text-left">Experiment</th>
+                        <th className="px-6 py-4 text-left">Status</th>
+                        <th className="px-6 py-4 text-right">Score</th>
+                        <th className="px-6 py-4 text-left hidden md:table-cell">Feedback</th>
+                        <th className="px-6 py-4 text-left hidden lg:table-cell">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-black/5">
+                      {submissions.map((sub) => {
+                        const badge = STATUS_BADGE[sub.status]
+                        const exp   = experiments.find((e) => e.id === sub.experiment_id)
+                        return (
+                          <tr key={sub.id} className="hover:bg-white/60 transition-colors">
+                            <td className="px-6 py-4 text-slate-900 font-bold">
+                              {exp?.title ?? `Experiment #${sub.experiment_id}`}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`text-[10px] px-2.5 py-1 rounded-md border font-bold uppercase tracking-wider ${badge.cls}`}>
+                                {badge.label}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right font-mono font-bold text-base">
+                              {sub.automatic_score !== null
+                                ? <span className={sub.automatic_score >= 70 ? 'text-green-600' : 'text-amber-600'}>
+                                    {sub.automatic_score}%
+                                  </span>
+                                : <span className="text-slate-400">—</span>}
+                            </td>
+                            <td className="px-6 py-4 text-slate-600 hidden md:table-cell max-w-[200px] truncate font-medium">
+                              {sub.teacher_feedback ?? '—'}
+                            </td>
+                            <td className="px-6 py-4 text-slate-500 hidden lg:table-cell text-xs font-semibold">
+                              {sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : '—'}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
       </div>
     </div>
   )
