@@ -243,6 +243,7 @@ export interface Experiment {
 export interface Submission {
   id:                    number
   student_id:            number
+  student_name?:         string
   experiment_id:         number
   recorded_observations: Record<string, unknown> | null
   automatic_score:       number | null

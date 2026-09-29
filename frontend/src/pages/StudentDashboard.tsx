@@ -255,8 +255,8 @@ export default function StudentDashboard() {
       className="min-h-screen text-slate-900 bg-cover bg-center bg-fixed relative"
       style={{ backgroundImage: "url('/images/science_bg.png')" }}
     >
-      {/* Dynamic blurred overlay for readability */}
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[4px] pointer-events-none"></div>
+      {/* Dynamic blurred overlay for readability - reduced blur & opacity */}
+      <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-[2px] pointer-events-none"></div>
 
       {/* ── Toast ── */}
       {toast && (
@@ -312,7 +312,7 @@ export default function StudentDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-10 flex-1 w-full">
 
           {/* ── Welcome banner ── */}
-          <div className="rounded-2xl p-8 bg-white/70 backdrop-blur-lg border border-white/40 shadow-xl overflow-hidden relative">
+          <div className="rounded-2xl p-8 bg-white/40 backdrop-blur-md border border-white/40 shadow-xl overflow-hidden relative">
             {/* Subtle decorative glowing orb */}
             <div className="absolute top-[-50%] right-[-10%] w-64 h-64 bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
             
@@ -360,7 +360,7 @@ export default function StudentDashboard() {
                   return (
                     <div
                       key={exp.id}
-                      className="rounded-2xl border border-white/20 bg-white/80 backdrop-blur-md overflow-hidden hover:shadow-2xl hover:bg-white/95 transition-all duration-300 group cursor-pointer relative flex flex-col transform hover:-translate-y-1"
+                      className="rounded-2xl border border-white/20 bg-white/50 backdrop-blur-sm overflow-hidden hover:shadow-2xl hover:bg-white/70 transition-all duration-300 group cursor-pointer relative flex flex-col transform hover:-translate-y-1"
                       onClick={() => openExperiment(exp)}
                     >
                       <div className="p-6 flex-1 flex flex-col relative z-10">
@@ -424,7 +424,7 @@ export default function StudentDashboard() {
                 No submissions yet. Launch an experiment above to get started.
               </div>
             ) : (
-              <div className="rounded-2xl border border-white/30 bg-white/85 backdrop-blur-xl overflow-hidden shadow-2xl">
+              <div className="rounded-2xl border border-white/30 bg-white/60 backdrop-blur-md overflow-hidden shadow-2xl">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-slate-900/5 text-slate-600 text-xs uppercase tracking-widest border-b border-black/5 font-bold">

@@ -178,3 +178,7 @@ class Submission(Base):
             f"<Submission id={self.id} student_id={self.student_id} "
             f"experiment_id={self.experiment_id} status={self.status.value}>"
         )
+
+    @property
+    def student_name(self) -> str | None:
+        return self.student.full_name if self.student else None

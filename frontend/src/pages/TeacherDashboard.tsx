@@ -218,31 +218,39 @@ export default function TeacherDashboard() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+    <div 
+      className="min-h-screen text-slate-900 flex flex-col bg-cover bg-center bg-fixed relative"
+      style={{ backgroundImage: "url('/images/teacher_bg.png')" }}
+    >
+      {/* Light blurred overlay for readability while keeping the professional vibe */}
+      <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] pointer-events-none"></div>
+
+      {/* ── Content Wrapper ── */}
+      <div className="relative z-10 flex-1 flex flex-col min-w-0">
 
       {/* ── Top nav ── */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+      <nav className="bg-white/80 backdrop-blur-md border-b border-white/40 sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm bg-slate-900 text-white">🔬</div>
+            <div className="w-8 h-8 rounded-md flex items-center justify-center text-sm bg-gradient-to-br from-blue-600 to-indigo-600 shadow-md text-white">🔬</div>
             <span className="font-semibold text-slate-900">Virtual Science Lab</span>
-            <span className="text-xs px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+            <span className="text-[10px] px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-200 uppercase font-bold tracking-wider">
               Teacher
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-600 hidden sm:block">{user?.full_name}</span>
+            <span className="text-sm font-medium text-slate-700 hidden sm:block">{user?.full_name}</span>
 
             <button
               onClick={() => setPwdModal(true)}
-              className="text-xs px-3 py-1.5 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+              className="text-xs font-semibold px-3 py-1.5 rounded-md border border-slate-300 bg-white/50 text-slate-700 hover:bg-white transition-all shadow-sm"
             >
               Change Password
             </button>
             <button
               id="teacher-logout"
               onClick={logout}
-              className="text-xs px-3 py-1.5 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+              className="text-xs font-semibold px-3 py-1.5 rounded-md border border-slate-300 bg-white/50 text-slate-700 hover:bg-white transition-all shadow-sm"
             >
               Sign out
             </button>
@@ -253,7 +261,7 @@ export default function TeacherDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full flex-1 flex flex-col gap-8">
 
         {/* ── Welcome ── */}
-        <div className="rounded-xl p-6 bg-white border border-slate-200 shadow-sm">
+        <div className="rounded-2xl p-8 bg-white/60 backdrop-blur-md border border-white/50 shadow-xl overflow-hidden relative">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
             <div>
               <p className="text-slate-500 text-sm mb-1">Teacher Dashboard</p>
@@ -281,33 +289,33 @@ export default function TeacherDashboard() {
         </div>
 
         {/* ── Tab navigation ── */}
-        <div className="flex items-center gap-6 border-b border-slate-200 pb-px">
+        <div className="flex items-center gap-6 border-b border-slate-300/50 pb-px">
           <button
             onClick={() => setActiveTab('experiments')}
-            className={`text-sm font-semibold pb-3 transition-colors border-b-2 ${
+            className={`text-sm font-bold pb-3 transition-colors border-b-2 ${
               activeTab === 'experiments'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                ? 'border-blue-600 text-blue-700'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-400'
             }`}
           >
             🧪 My Experiments
           </button>
           <button
             onClick={() => setActiveTab('submissions')}
-            className={`text-sm font-semibold pb-3 transition-colors border-b-2 ${
+            className={`text-sm font-bold pb-3 transition-colors border-b-2 ${
               activeTab === 'submissions'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                ? 'border-blue-600 text-blue-700'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-400'
             }`}
           >
             📋 Submissions
           </button>
           <button
             onClick={() => setActiveTab('analytics')}
-            className={`text-sm font-semibold pb-3 transition-colors border-b-2 ${
+            className={`text-sm font-bold pb-3 transition-colors border-b-2 ${
               activeTab === 'analytics'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                ? 'border-blue-600 text-blue-700'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-400'
             }`}
           >
             📈 Analytics
@@ -359,23 +367,23 @@ export default function TeacherDashboard() {
                 </button>
               </div>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredExps.map(exp => {
                   const statusBadge = EXP_STATUS_BADGE[exp.status] ?? EXP_STATUS_BADGE.draft
                   return (
-                    <div key={exp.id} className="rounded-xl border border-slate-200 bg-white overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+                    <div key={exp.id} className="rounded-2xl border border-white/50 bg-white/70 backdrop-blur-md overflow-hidden hover:shadow-xl transition-all flex flex-col transform hover:-translate-y-1">
                       {/* Card header */}
-                      <div className="px-4 py-3 border-b border-slate-100 flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className={`text-xs px-2 py-0.5 rounded-md border font-medium ${SUBJECT_BADGE[exp.subject] ?? ''}`}>
+                      <div className="px-5 py-4 border-b border-slate-200/50 flex-1">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className={`text-[10px] px-2.5 py-1 rounded-md border font-bold uppercase tracking-wider ${SUBJECT_BADGE[exp.subject] ?? ''}`}>
                             {exp.subject}
                           </span>
-                          <span className={`text-xs px-2 py-0.5 rounded-md border font-medium ${statusBadge.cls}`}>
+                          <span className={`text-[10px] px-2.5 py-1 rounded-md border font-bold uppercase tracking-wider ${statusBadge.cls}`}>
                             {statusBadge.label}
                           </span>
                         </div>
-                        <h3 className="text-sm font-bold text-slate-900 leading-snug">{exp.title}</h3>
-                        <p className="text-xs text-slate-600 mt-1 line-clamp-2">{exp.description}</p>
+                        <h3 className="text-base font-bold text-slate-900 leading-snug">{exp.title}</h3>
+                        <p className="text-xs text-slate-700 mt-2 line-clamp-2 leading-relaxed">{exp.description}</p>
                       </div>
                       {/* Card meta */}
                       <div className="px-4 py-2 flex items-center gap-2 text-xs text-slate-500 font-medium">
@@ -469,21 +477,26 @@ export default function TeacherDashboard() {
             {/* ── Submissions grading panel ── */}
             <div className="flex-1 min-w-0">
               {!selectedExp ? (
-                <div className="h-full flex items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div className="h-full flex items-center justify-center rounded-2xl border border-white/50 bg-white/50 backdrop-blur-sm shadow-sm">
                   <div className="text-center p-8">
-                    <div className="text-4xl mb-3">📋</div>
-                    <p className="text-slate-500 text-sm font-medium">Select an experiment to view student submissions</p>
+                    <div className="text-5xl mb-4 drop-shadow-sm">📋</div>
+                    <p className="text-slate-600 text-sm font-bold">Select an experiment to view student submissions</p>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-base font-bold text-slate-900">
-                      Submissions — <span className="text-blue-600">{selectedExp.title}</span>
+                  <div className="flex items-center justify-between bg-white/60 backdrop-blur-md p-4 rounded-xl border border-white/50 shadow-sm">
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Submissions — <span className="text-blue-700">{selectedExp.title}</span>
                     </h2>
-                    {gradeMsg && (
-                      <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-md">{gradeMsg}</span>
-                    )}
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-bold text-slate-600 uppercase tracking-wide bg-white/70 px-3 py-1.5 rounded-md shadow-sm border border-slate-200/50">
+                        {submissions.length} Total Submissions
+                      </span>
+                      {gradeMsg && (
+                        <span className="text-xs font-bold text-green-700 bg-green-100/80 px-3 py-1.5 rounded-md border border-green-200 shadow-sm">{gradeMsg}</span>
+                      )}
+                    </div>
                   </div>
 
                   {loadingSubs ? (
@@ -499,28 +512,28 @@ export default function TeacherDashboard() {
                         const isGrading = gradingId === sub.id
                         return (
                           <div key={sub.id}
-                               className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                               className="rounded-2xl border border-white/50 bg-white/80 backdrop-blur-md overflow-hidden shadow-sm hover:shadow-lg transition-all">
                             {/* Submission header */}
-                            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-slate-200 text-slate-700">
-                                  {String(sub.student_id).slice(-2)}
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200/50 bg-white/40">
+                              <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-800 shadow-sm border border-blue-200/50">
+                                  {sub.student_name ? sub.student_name.charAt(0).toUpperCase() : String(sub.student_id).slice(-2)}
                                 </div>
                                 <div>
-                                  <p className="text-sm font-bold text-slate-900">Student #{sub.student_id}</p>
-                                  <p className="text-xs text-slate-500 font-medium">
+                                  <p className="text-base font-extrabold text-slate-900">{sub.student_name ?? `Student #${sub.student_id}`}</p>
+                                  <p className="text-xs text-slate-600 font-semibold mt-0.5">
                                     {sub.submitted_at
                                       ? new Date(sub.submitted_at).toLocaleString()
                                       : 'Not submitted'}
                                   </p>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className={`text-xs px-2 py-0.5 rounded-md border font-medium ${badge.cls}`}>
+                              <div className="flex items-center gap-3">
+                                <span className={`text-[10px] px-2.5 py-1 rounded-md border font-bold uppercase tracking-wider ${badge.cls}`}>
                                   {badge.label}
                                 </span>
                                 {sub.final_score !== null && (
-                                  <span className={`text-xs font-mono font-bold ${sub.final_score >= 70 ? 'text-green-600' : 'text-amber-600'}`}>
+                                  <span className={`text-base font-mono font-black ${sub.final_score >= 70 ? 'text-green-600' : 'text-amber-600'}`}>
                                     {sub.final_score}/100
                                   </span>
                                 )}
@@ -529,11 +542,16 @@ export default function TeacherDashboard() {
 
                             {/* Observations */}
                             {sub.recorded_observations && (
-                              <div className="px-4 py-3 border-b border-slate-100">
-                                <p className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wide">Observations</p>
-                                <pre className="text-xs text-slate-700 font-mono bg-slate-50 border border-slate-200 rounded-md p-2 overflow-x-auto">
-                                  {JSON.stringify(sub.recorded_observations, null, 2)}
-                                </pre>
+                              <div className="px-5 py-4 border-b border-slate-200/50">
+                                <p className="text-xs text-blue-700 mb-3 font-black uppercase tracking-widest">Observations</p>
+                                <div className="bg-white/60 border border-slate-200/60 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 shadow-inner">
+                                  {Object.entries(sub.recorded_observations).map(([key, value]) => (
+                                    <div key={key} className="flex flex-col bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">{key.replace(/_/g, ' ')}</span>
+                                      <span className="text-sm font-extrabold text-slate-800 break-words">{String(value)}</span>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             )}
 
@@ -629,6 +647,7 @@ export default function TeacherDashboard() {
           </div>
         )}
 
+      </div>
       </div>
 
       {showPwdModal && (

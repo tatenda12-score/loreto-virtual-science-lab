@@ -90,6 +90,7 @@ class SubmissionResponse(SubmissionBase):
 
     id: int
     student_id: int
+    student_name: Optional[str] = None
     experiment_id: int
     automatic_score: Optional[float]
     final_score: Optional[float]
