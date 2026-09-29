@@ -5,6 +5,43 @@ Generic and dynamic grading logic.
 """
 from typing import Any
 from .ohms_law import calculate_ohms_law
+from .velocity import calculate_velocity
+
+def grade_dynamic_velocity(
+    recorded_observations: dict[str, Any],
+    tolerance: float = 0.05,
+) -> float:
+    """
+    Dynamically grade a Velocity submission.
+    """
+    try:
+        raw_d = recorded_observations.get("distance_m")
+        raw_t = recorded_observations.get("time_s")
+
+        if raw_d is None or raw_t is None:
+            return 0.0
+
+        distance = float(raw_d)
+        time = float(raw_t)
+
+        if distance <= 0 or time <= 0:
+            return 0.0
+
+        expected = calculate_velocity(distance, time)
+        expected_velocity = expected["velocity_ms"]
+
+        student_val = recorded_observations.get("velocity_ms")
+        if student_val is None:
+            return 0.0
+            
+        score = evaluate_submission(
+            expected_val=float(expected_velocity),
+            student_val=float(student_val),
+            tolerance=tolerance,
+        )
+        return score
+    except (ValueError, TypeError):
+        return 0.0
 
 def evaluate_submission(
     expected_val: float,
@@ -100,6 +137,16 @@ def grade_submission(
         )
     ):
         return grade_dynamic_ohms_law(recorded_observations, tolerance=tolerance)
+
+    if (
+        "distance_m" in recorded_observations
+        and "time_s" in recorded_observations
+        and (
+            experiment_parameters.get("simulation_type") == "velocity"
+            or "velocity_ms" in recorded_observations
+        )
+    ):
+        return grade_dynamic_velocity(recorded_observations, tolerance=tolerance)
 
     expected_values: dict = experiment_parameters.get("expected_values", {})
     if not expected_values:

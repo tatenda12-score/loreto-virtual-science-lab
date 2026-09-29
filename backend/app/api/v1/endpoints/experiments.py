@@ -108,6 +108,11 @@ def list_experiments(
     else:
         if status_filter is not None:
             query = query.filter(Experiment.status == status_filter)
+        if _current_user.role == UserRole.teacher:
+            # Teachers can only view experiments for their assigned class or unassigned experiments
+            query = query.filter(
+                (Experiment.class_level == _current_user.class_level) | (Experiment.class_level == None) | (Experiment.class_level == "")
+            )
 
     experiments = (
         query.order_by(Experiment.created_at.desc())
@@ -148,6 +153,14 @@ def get_experiment(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Experiment with id={experiment_id} not found.",
             )
+        if experiment.class_level and experiment.class_level != "" and experiment.class_level != _current_user.class_level:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Experiment with id={experiment_id} not found for your class.",
+            )
+
+    # Teachers cannot view experiments not in their class
+    if _current_user.role == UserRole.teacher:
         if experiment.class_level and experiment.class_level != "" and experiment.class_level != _current_user.class_level:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

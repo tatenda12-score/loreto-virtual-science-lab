@@ -110,6 +110,7 @@ class TestBatch4WorkflowAndSecurity(unittest.TestCase):
             hashed_password=hash_password("TeacherPass123!"),
             role=UserRole.teacher,
             subject_code="PHY101",
+            class_level="L6",
             is_active=True,
             is_verified=True,
         )

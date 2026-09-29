@@ -4,7 +4,7 @@ app/services/science_engine/__init__.py
 Modular simulation and auto-grading engine.
 """
 
-from .grading import evaluate_submission, grade_submission, grade_dynamic_ohms_law
+from .grading import evaluate_submission, grade_submission, grade_dynamic_ohms_law, grade_dynamic_velocity
 from .ohms_law import calculate_ohms_law
 from .velocity import calculate_velocity
 from .titration import calculate_titration
@@ -14,6 +14,7 @@ __all__ = [
     "evaluate_submission",
     "grade_submission",
     "grade_dynamic_ohms_law",
+    "grade_dynamic_velocity",
     "calculate_ohms_law",
     "calculate_velocity",
     "calculate_titration",

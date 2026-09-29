@@ -1,0 +1,193 @@
+# Software Engineering Project Dissertation - Analytics Extraction
+
+## 1. System Architecture & Tech Stack
+
+**Frontend Stack**:
+- Framework: React 19, TypeScript
+- Build Tool: Vite 8.2.0
+- CSS/Styling: TailwindCSS v4, class-variance-authority, clsx, tailwind-merge
+- UI Components: Radix UI (@radix-ui/react-slot), Lucide React icons
+- Routing: react-router-dom v7
+- State Management/Client Libraries: Axios v1.19.0 (with request/response interceptors)
+
+**Backend Stack**:
+- Language: Python 3.12+
+- Web Framework: FastAPI (>=0.115.0)
+- Runtime: Uvicorn (dev), Gunicorn + Uvicorn workers (prod)
+- ORM/Query Builder: SQLAlchemy 2.0 (>=2.0.30)
+- Migrations: Alembic (>=1.13.0)
+- Validation Engine: Pydantic v2 (pydantic[email], pydantic-settings)
+
+**Database & Storage**:
+- Database Engine: SQLite (local dev - `loreto_lab.db`), PostgreSQL-ready (`psycopg2-binary`).
+- Caching/Storage: No dedicated external caching layer discovered. File storage is standard local unless overridden for prod.
+
+**Third-Party Services / AI Integrations**:
+- No AI integrations or third-party APIs were directly observed in the codebase. Uses an internal "Science Engine" for auto-grading physics/chemistry formulas.
+
+**Environment & Hosting**:
+- Local Environment: Node/Vite (port 5173), Python/Uvicorn (port 8000)
+- Proxy: Vite proxy `/api` -> `http://localhost:8000`
+- Production target: Vercel (frontend, per `vercel.json`), Render or similar (backend, per `.env.example` mentioning `ALLOWED_HOSTS`).
+
+## 2. Scope & Objectives Context
+
+**Core Features Implemented**:
+- User Authentication (JWT, bcrypt, registration, login)
+- Role-Based Access Control (Admin, Teacher, Student)
+- Experiments CRUD (Create, List, Retrieve, Update, Delete)
+- Submissions & Auto-Grading (Science Engine dynamically grades Ohm's Law, Velocity, etc.)
+- Interactive Simulations (e.g., Ohm's Law SVG circuit)
+- Dashboards for Students (submit labs) and Teachers (override grades, feedback)
+
+**Distinct User Roles**:
+- **Admin**: School IT administrator; full system access (can delete experiments).
+- **Teacher**: Subject teacher; manages labs, views assigned class submissions, overrides grades.
+- **Student**: Enrolled student; runs virtual experiments, submits observations.
+
+**Excluded / TODO Features**:
+- Student registration page (UI not yet built, only API exists)
+- Email verification flow & Password reset (forgot password)
+- File/image upload for experiment instructions
+- Student leaderboard/analytics
+- Print/export lab reports as PDF
+
+## 3. Data Design & Schemas
+
+**Database Tables (SQLAlchemy Models)**:
+
+1. **`users` Table**
+   - Columns: `id` (Int, PK), `full_name` (String(255)), `email` (String(255), Unique), `hashed_password` (String(255)), `role` (Enum: admin/teacher/student), `is_active` (Bool), `is_verified` (Bool), `class_level` (String(50), Nullable), `subject_code` (String(50), Nullable), `gender` (String(20), Nullable), `created_at` (DateTime), `updated_at` (DateTime).
+   - Relationships: 1:N to `experiments` (created_experiments), 1:N to `submissions` (student_id).
+
+2. **`experiments` Table**
+   - Columns: `id` (Int, PK), `title` (String(255)), `subject` (Enum: Physics/Chemistry/Biology), `difficulty` (Enum), `topic` (String(255)), `description` (Text), `class_level` (String(50)), `simulation_type` (Enum), `status` (Enum), `materials` (JSONB), `instructions` (JSONB), `parameters` (JSONB), `created_by` (Int, FK to users.id), `created_at`, `updated_at`.
+   - Relationships: N:1 to `users` (creator), 1:N to `submissions`.
+
+3. **`submissions` Table**
+   - Columns: `id` (Int, PK), `student_id` (Int, FK to users.id), `experiment_id` (Int, FK to experiments.id), `recorded_observations` (JSONB), `automatic_score` (Float, Nullable), `final_score` (Float, Nullable), `graded_by_id` (Int, FK to users.id), `graded_at` (DateTime, Nullable), `teacher_feedback` (Text, Nullable), `status` (Enum: draft/submitted/graded), `submitted_at`, `created_at`, `updated_at`.
+   - Relationships: N:1 to `users` (student), N:1 to `experiments` (experiment), N:1 to `users` (graded_by).
+
+**File Storage**:
+- Does not currently implement file uploads (listed as a future improvement). Data is persisted structurally in SQLite/Postgres.
+
+## 4. System Controls & Security
+
+**Authentication Mechanism**:
+- JWT (JSON Web Tokens) generated using `python-jose`, stored in `localStorage` (`vsl_access_token`) on the frontend.
+- Standard OAuth2 password flow (`POST /api/v1/auth/login`).
+
+**Access Control / RBAC**:
+- Enforced via a FastAPI dependency `require_roles(UserRole...)` on route handlers.
+- Example: `@router.patch(...) def grade_submission(..., _current_user: User = Depends(require_roles(UserRole.teacher, UserRole.admin)))`.
+
+**Input Validation & Security**:
+- Backend: Pydantic v2 schemas (`SubmissionCreate`, `ExperimentCreate`, etc.).
+- Password Hashing: `passlib` with `bcrypt` algorithm (v4.0.1).
+- Middleware: CORS middleware allowing specific origins (`ALLOWED_ORIGINS`), TrustedHost middleware (`ALLOWED_HOSTS`).
+
+**Error Handling**:
+- Backend: Global exception handler (catch-all returning 500 JSON), structured `HTTPException` raises (404, 403, 400).
+- Frontend: Axios response interceptors mapping 401 to login redirect, global error message mapping (`getErrorMessage`).
+
+## 5. Codebase Structure & Concrete Snippets
+
+**High-Level Structure**:
+```text
+Virtual Science/
+├── backend/
+│   ├── alembic/                 # Migrations
+│   ├── app/
+│   │   ├── api/v1/endpoints/    # FastAPI route controllers
+│   │   ├── core/                # Config, Security (JWT)
+│   │   ├── db/                  # Database setup (database.py)
+│   │   ├── models/              # SQLAlchemy ORM definitions
+│   │   ├── schemas/             # Pydantic models
+│   │   └── services/            # Business logic (science_engine)
+│   ├── scripts/                 # Seed scripts
+│   └── tests/                   # Pytest suites
+└── frontend/
+    ├── src/
+    │   ├── components/ui/       # Radix/Tailwind components
+    │   ├── contexts/            # AuthContext
+    │   ├── pages/               # React views
+    │   └── services/            # Axios API config
+```
+
+**Snippet 1: Database Connection (`backend/app/db/database.py`)**
+```python
+engine_kwargs: dict = {
+    "connect_args": connect_args,
+    "echo": settings.is_development,
+    "future": True,
+    "pool_pre_ping": True,
+}
+engine = create_engine(db_url, **engine_kwargs)
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+```
+
+**Snippet 2: Authenticated API Route (`backend/app/api/v1/endpoints/submissions.py`)**
+```python
+@router.get("/me", response_model=list[SubmissionResponse])
+def get_my_submissions(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.student)),
+) -> list[SubmissionResponse]:
+    return db.query(Submission).filter(Submission.student_id == current_user.id).order_by(Submission.submitted_at.desc()).offset(skip).limit(limit).all()
+```
+
+**Snippet 3: Business Logic (`backend/app/services/science_engine/grading.py`)**
+```python
+def evaluate_submission(expected_val: float, student_val: float, tolerance: float = 0.05) -> float:
+    if expected_val == 0.0:
+        abs_error = abs(student_val)
+        raw_score = max(0.0, 1.0 - (abs_error / tolerance)) * 100.0
+        return round(raw_score, 2)
+    pct_error = abs(student_val - expected_val) / abs(expected_val)
+    raw_score = max(0.0, 1.0 - (pct_error / tolerance)) * 100.0
+    return round(raw_score, 2)
+```
+
+**Snippet 4: Frontend API Client (`frontend/src/services/api.ts`)**
+```typescript
+api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+    const token = localStorage.getItem(TOKEN_KEY)
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+})
+```
+
+## 6. Testing, Resilience & Performance
+
+**Testing Suites**:
+- Frameworks: `pytest` configured on the backend (found `.pytest_cache`, `tests/test_security.py`, `tests/test_teacher_analytics.py`, `tests/test_admin_analytics.py`).
+- Frontend tests are not currently prominent based on configurations.
+
+**Resilience Strategies**:
+- DB Connections: Production PostgreSQL pool timeout (30s), connection timeout (10s), and `pool_pre_ping=True` handling dropped connections. Axios requests on frontend have a 90,000ms timeout specifically to handle "Render free-tier cold starts".
+- Pagination limits: `ge=1, le=100` constraints on `skip/limit` query params.
+
+**Optimizations**:
+- Database Indexing: Heavily indexed ORM tables (e.g. `Index("ix_submissions_student_experiment", "student_id", "experiment_id")`, `Index("ix_users_role_class", "role", "class_level")`).
+- Asset Bundling: Vite `tsc -b && vite build` for rapid builds.
+
+## 7. Verification & Metrics
+
+**Dependencies Listed**:
+- *Backend (`requirements.txt`)*: fastapi, uvicorn[standard], sqlalchemy, psycopg2-binary, alembic, pydantic, passlib, bcrypt, python-jose, python-dotenv.
+- *Frontend (`package.json`)*: react, react-dom, react-router-dom, axios, tailwindcss, lucide-react.
+
+**Environment Variable Keys (`.env.example`)**:
+- `DATABASE_URL`
+- `SECRET_KEY`
+- `ALGORITHM`
+- `ACCESS_TOKEN_EXPIRE_MINUTES`
+- `APP_ENV`
+- `APP_TITLE`
+- `APP_VERSION`
+- `ALLOWED_ORIGINS`
+- `ALLOWED_HOSTS`

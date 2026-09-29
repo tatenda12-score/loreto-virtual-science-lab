@@ -27,7 +27,9 @@ from app.core.config import settings
 raw_url = settings.DATABASE_URL
 if raw_url.startswith("postgres://"):
     # SQLAlchemy 1.4+ / 2.0 requires postgresql:// instead of postgres://
-    db_url = raw_url.replace("postgres://", "postgresql://", 1)
+    db_url = raw_url.replace("postgres://", "postgresql+psycopg2://", 1)
+elif raw_url.startswith("postgresql://"):
+    db_url = raw_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 else:
     db_url = raw_url
 

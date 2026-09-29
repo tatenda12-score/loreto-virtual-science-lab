@@ -16,22 +16,18 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 
 from app.core.config import settings
-
-# ---------------------------------------------------------------------------
-# Passlib context — bcrypt is the recommended algorithm for passwords.
-# `deprecated="auto"` will auto-upgrade legacy hashes on next login.
-# ---------------------------------------------------------------------------
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 # ── Password helpers ────────────────────────────────────────────────────────
 
 def hash_password(plain_password: str) -> str:
     """Return the bcrypt hash of *plain_password*."""
-    return pwd_context.hash(plain_password)
+    # bcrypt requires bytes
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(plain_password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -40,8 +36,13 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
     Uses a constant-time comparison internally — safe against timing attacks.
     """
-    return pwd_context.verify(plain_password, hashed_password)
-
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode('utf-8'), 
+            hashed_password.encode('utf-8')
+        )
+    except ValueError:
+        return False
 
 # ── JWT helpers ─────────────────────────────────────────────────────────────
 
