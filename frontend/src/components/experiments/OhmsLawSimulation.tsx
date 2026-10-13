@@ -47,10 +47,15 @@ const needleAngle = (current: number) =>
   mapRange(Math.min(current, MAX_CURRENT), 0, MAX_CURRENT, -90, 90)
 
 // ── Colour helpers ─────────────────────────────────────────────────────────────
-function getAccuracyColour(pctError: number) {
-  if (pctError <= 0.05) return { text: 'text-emerald-400', label: 'Excellent', bg: 'bg-emerald-500/10 border-emerald-500/30' }
-  if (pctError <= 0.15) return { text: 'text-amber-400',   label: 'Close',     bg: 'bg-amber-500/10  border-amber-500/30' }
-  return                       { text: 'text-red-400',     label: 'Off',       bg: 'bg-red-500/10    border-red-500/30' }
+function getAccuracyColour(pctError: number, isInvalid: boolean = false) {
+  if (isInvalid) {
+    return { text: "text-red-400", label: "Invalid Reading", bg: "bg-red-500/10 border-red-500/30", stars: 0 }
+  }
+  if (pctError <= 0.05) return { text: "text-emerald-400", label: "Excellent (Within 5%)", bg: "bg-emerald-500/10 border-emerald-500/30", stars: 5 }
+  if (pctError <= 0.10) return { text: "text-teal-400",    label: "Good (Within 10%)",     bg: "bg-teal-500/10    border-teal-500/30",    stars: 4 }
+  if (pctError <= 0.15) return { text: "text-amber-400",   label: "Close (Within 15%)",    bg: "bg-amber-500/10  border-amber-500/30",   stars: 3 }
+  if (pctError <= 0.25) return { text: "text-orange-400",  label: "High Error (>15%)",     bg: "bg-orange-500/10 border-orange-500/30", stars: 1 }
+  return                       { text: "text-red-400",     label: "Incorrect / False",     bg: "bg-red-500/10    border-red-500/30",     stars: 0 }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -211,9 +216,10 @@ function OhmsLawWorkspace({ experimentId, onSubmitSuccess }: WorkspaceProps) {
 
   // Student's parsed reading
   const studentVal  = parseFloat(studentInput)
-  const hasInput    = !isNaN(studentVal) && studentInput.trim() !== ''
-  const pctError    = hasInput ? Math.abs(studentVal - theoreticalCurrent) / theoreticalCurrent : null
-  const accuracy    = pctError !== null ? getAccuracyColour(pctError) : null
+  const isInvalid   = isNaN(studentVal) || studentVal <= 0
+  const hasInput    = !isNaN(studentVal) && studentInput.trim() !== ""
+  const pctError    = (hasInput && !isInvalid) ? Math.abs(studentVal - theoreticalCurrent) / theoreticalCurrent : (hasInput && isInvalid ? 9.99 : null)
+  const accuracy    = pctError !== null ? getAccuracyColour(pctError, isInvalid) : null
 
   // Reset submission state when sliders change
   useEffect(() => { setSubmitted(false); setSubmitError(null) }, [voltage, resistance])
@@ -375,25 +381,24 @@ function OhmsLawWorkspace({ experimentId, onSubmitSuccess }: WorkspaceProps) {
             <div className={`mt-3 rounded-lg border px-3 py-2 ${accuracy.bg}`}>
               <div className="flex items-center justify-between">
                 <span className={`text-xs font-semibold ${accuracy.text}`}>
-                  {accuracy.label} — {(pctError * 100).toFixed(1)}% error
+                  {accuracy.label} — {isInvalid ? "Invalid value" : `${(pctError * 100).toFixed(1)}% error`}
                 </span>
-                <div className="flex gap-1">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <div key={i}
-                         className={`w-2 h-2 rounded-full transition-colors ${
-                           i < Math.max(1, 5 - Math.round(pctError * 20))
-                             ? accuracy.text.replace('text-', 'bg-')
-                             : 'bg-slate-700'
+                <div className="flex gap-1" title={`${accuracy.stars} / 5 Rating`}>
+                  {[0, 1, 2, 3, 4].map((idx) => (
+                    <div key={idx}
+                         className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                           idx < accuracy.stars
+                             ? accuracy.text.replace("text-", "bg-")
+                             : "bg-slate-700"
                          }`} />
                   ))}
                 </div>
               </div>
               <p className="text-xs text-slate-500 mt-1">
-                Expected: {theoreticalCurrent} A · Your reading: {studentVal} A
+                Expected: {theoreticalCurrent} A · Your reading: {studentInput} A
               </p>
             </div>
           )}
-
           {/* Formula reminder */}
           <div className="mt-3 rounded-lg bg-slate-800/60 px-3 py-2 border border-white/5">
             <p className="text-xs text-slate-400 font-mono">

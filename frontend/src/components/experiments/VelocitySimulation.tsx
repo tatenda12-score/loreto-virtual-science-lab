@@ -66,6 +66,21 @@ export default function VelocitySimulation({ experiment, onClose, onSuccess }: S
     }
   };
 
+  const expectedVelocity = time > 0 ? Number((distance / time).toFixed(2)) : 0;
+  const studentNum = parseFloat(studentInput);
+  const isInputValid = !isNaN(studentNum) && studentNum > 0;
+  const pctError = isInputValid && expectedVelocity > 0
+    ? Math.abs(studentNum - expectedVelocity) / expectedVelocity
+    : null;
+
+  const getAccuracyBadge = () => {
+    if (pctError === null) return null;
+    if (pctError <= 0.05) return { label: 'Excellent (Within 5%)', cls: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' };
+    if (pctError <= 0.15) return { label: 'Close (Within 15%)', cls: 'text-amber-400 bg-amber-500/10 border-amber-500/30' };
+    return { label: 'Inaccurate / False Calculation', cls: 'text-red-400 bg-red-500/10 border-red-500/30' };
+  };
+  const accuracyBadge = getAccuracyBadge();
+
   const hasInput = !isNaN(Number(studentInput)) && studentInput.trim() !== '';
 
   return (
@@ -178,6 +193,14 @@ export default function VelocitySimulation({ experiment, onClose, onSuccess }: S
                     placeholder="e.g. 10.5"
                     className="w-full bg-slate-950 border border-orange-500/50 rounded-xl px-4 py-3 text-white font-mono text-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all shadow-[0_0_10px_rgba(234,88,12,0.1)]"
                   />
+                  {hasInput && accuracyBadge && pctError !== null && (
+                    <div className={`mt-3 rounded-lg border px-3 py-2 ${accuracyBadge.cls}`}>
+                      <p className="text-xs font-semibold">{accuracyBadge.label} — {(pctError * 100).toFixed(1)}% error</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Expected v = {distance}m / {time}s = {expectedVelocity} m/s
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-lg bg-slate-800/50 p-4 border border-white/5 mt-6">

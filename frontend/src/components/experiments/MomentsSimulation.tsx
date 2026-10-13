@@ -37,7 +37,11 @@ export default function MomentsSimulation({ experiment, onClose, onSuccess }: Si
     try {
       const result = await createSubmission(experiment.id, {
         trial1_moment: parseFloat(observations.trial1_moment),
-        trial2_moment: parseFloat(observations.trial2_moment)
+        trial2_moment: parseFloat(observations.trial2_moment),
+        left_mass: leftMass,
+        left_distance: leftDistance,
+        right_mass: rightMass,
+        right_distance: rightDistance,
       });
       onSuccess(result.automatic_score);
     } catch (e) {

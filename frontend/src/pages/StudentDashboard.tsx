@@ -244,23 +244,58 @@ export default function StudentDashboard() {
   // ── On submission success ─────────────────────────────────────────────────
   function handleSimulationSuccess(score: number | null) {
     refreshSubmissions()
-    setToast({
-      message: score !== null
-        ? `Auto-graded score: ${score}/100. Great work!`
-        : 'Submission received. Awaiting grading.',
-      type: 'success',
-    })
+    if (score !== null) {
+      if (score >= 70) {
+        setToast({
+          message: `Auto-graded score: ${score}/100. Excellent scientific accuracy!`,
+          type: 'success',
+        })
+      } else if (score >= 50) {
+        setToast({
+          message: `Auto-graded score: ${score}/100. Satisfactory, but review your measurement accuracy.`,
+          type: 'success',
+        })
+      } else {
+        setToast({
+          message: `Auto-graded score: ${score}/100. Inaccurate observations or calculations. Please review theory and retry.`,
+          type: 'error',
+        })
+      }
+    } else {
+      setToast({
+        message: 'Submission received. Awaiting teacher grading.',
+        type: 'success',
+      })
+    }
   }
 
   function handleGenericSuccess(sub: Submission) {
     setSubmissions((prev) => [sub, ...prev])
     closeModal()
-    setToast({
-      message: sub.automatic_score !== null
-        ? `Submitted! Auto-score: ${sub.automatic_score}/100`
-        : 'Submission received!',
-      type: 'success',
-    })
+    const score = sub.automatic_score
+    if (score !== null) {
+      if (score >= 70) {
+        setToast({
+          message: `Auto-graded score: ${score}/100. Excellent accuracy!`,
+          type: 'success',
+        })
+      } else if (score >= 50) {
+        setToast({
+          message: `Auto-graded score: ${score}/100. Pass, but observations have errors.`,
+          type: 'success',
+        })
+      } else {
+        setToast({
+          message: `Auto-graded score: ${score}/100. Inaccurate observations recorded.`,
+          type: 'error',
+        })
+      }
+    } else {
+      setToast({
+        message: 'Submission received!',
+        type: 'success',
+      })
+    }
   }
 
   // ── Derived stats ─────────────────────────────────────────────────────────
@@ -478,7 +513,7 @@ export default function StudentDashboard() {
                             </td>
                             <td className="px-6 py-4 text-right font-mono font-bold text-base">
                               {sub.automatic_score !== null
-                                ? <span className={sub.automatic_score >= 70 ? 'text-green-600' : 'text-amber-600'}>
+                                ? <span className={sub.automatic_score >= 70 ? 'text-green-600 font-bold' : sub.automatic_score >= 50 ? 'text-amber-600 font-bold' : 'text-red-600 font-bold'}>
                                     {sub.automatic_score}%
                                   </span>
                                 : <span className="text-slate-400">—</span>}

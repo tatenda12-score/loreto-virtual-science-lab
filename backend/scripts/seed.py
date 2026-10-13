@@ -345,7 +345,8 @@ SEED_EXPERIMENTS: list[dict] = [
             "expected_values": {
                 "optimum_temp": 37.0
             },
-            "tolerance": 2.0
+            "tolerance": 2.0,
+            "tolerance_type": "absolute"
         },
         "class_level": "L6",
     },
@@ -368,7 +369,8 @@ SEED_EXPERIMENTS: list[dict] = [
             "expected_values": {
                 "mean_titre_cm3": 25.0
             },
-            "tolerance": 0.2
+            "tolerance": 0.2,
+            "tolerance_type": "absolute"
         },
         "class_level": "L6",
     },
@@ -392,7 +394,8 @@ SEED_EXPERIMENTS: list[dict] = [
                 "emf_V": 1.5,
                 "internal_resistance_ohm": 0.5
             },
-            "tolerance": 0.1
+            "tolerance": 0.1,
+            "tolerance_type": "absolute"
         },
         "class_level": "L6",
     },
@@ -415,7 +418,8 @@ SEED_EXPERIMENTS: list[dict] = [
             "expected_values": {
                 "plateau_rate": 10.0
             },
-            "tolerance": 2.0
+            "tolerance": 2.0,
+            "tolerance_type": "absolute"
         },
         "class_level": "Upper6",
     },
@@ -438,7 +442,8 @@ SEED_EXPERIMENTS: list[dict] = [
             "expected_values": {
                 "activation_energy_kj_mol": 50.0
             },
-            "tolerance": 5.0
+            "tolerance": 5.0,
+            "tolerance_type": "absolute"
         },
         "class_level": "Upper6",
     },
@@ -461,7 +466,8 @@ SEED_EXPERIMENTS: list[dict] = [
             "expected_values": {
                 "young_modulus_gpa": 120.0
             },
-            "tolerance": 15.0
+            "tolerance": 15.0,
+            "tolerance_type": "absolute"
         },
         "class_level": "Upper6",
     }
