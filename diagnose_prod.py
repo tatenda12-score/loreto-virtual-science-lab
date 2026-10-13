@@ -7,7 +7,7 @@ import urllib.parse
 import json
 
 BASE_URL = 'https://loreto-virtual-science-lab.onrender.com/api/v1'
-ADMIN_EMAIL = 'admin@loreto.edu.ng'
+ADMIN_EMAIL = 'admin@loreto.co.zw'
 ADMIN_PASSWORD = 'Demo123!'
 
 print("=== PRODUCTION DIAGNOSIS: Experiment class_level assignments ===\n")

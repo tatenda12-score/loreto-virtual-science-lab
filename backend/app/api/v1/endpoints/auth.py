@@ -77,6 +77,18 @@ def register(
 # POST /login  (OAuth2 password flow — works with Swagger UI + JSON clients)
 # ---------------------------------------------------------------------------
 
+def _resolve_user(db: Session, username_input: str) -> User | None:
+    raw = username_input.lower().strip()
+    candidates = [raw]
+    if raw in ("admin.co.zw", "admin@admin.co.zw", "admin"):
+        candidates.extend(["admin@loreto.co.zw", "admin@loreto.edu.ng"])
+    elif raw.endswith("@loreto.co.zw"):
+        candidates.append(raw.replace("@loreto.co.zw", "@loreto.edu.ng"))
+    elif raw.endswith("@loreto.edu.ng"):
+        candidates.append(raw.replace("@loreto.edu.ng", "@loreto.co.zw"))
+    return db.query(User).filter(User.email.in_(candidates)).first()
+
+
 @router.post(
     "/login",
     response_model=Token,
@@ -91,10 +103,7 @@ def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ) -> Token:
-    # OAuth2PasswordRequestForm uses `username` — map it to email
-    email = form_data.username.lower().strip()
-
-    user: User | None = db.query(User).filter(User.email == email).first()
+    user: User | None = _resolve_user(db, form_data.username)
 
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -126,8 +135,7 @@ def login_cookie(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
-    email = form_data.username.lower().strip()
-    user: User | None = db.query(User).filter(User.email == email).first()
+    user: User | None = _resolve_user(db, form_data.username)
 
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(

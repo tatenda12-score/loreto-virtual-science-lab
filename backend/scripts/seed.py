@@ -83,14 +83,14 @@ HASHED_DEFAULT   = hash_password(DEFAULT_PASSWORD)
 SEED_USERS: list[dict] = [
     {
         "full_name":       "System Administrator",
-        "email":           "admin@loreto.edu.ng",
+        "email":           "admin@loreto.co.zw",
         "hashed_password": HASHED_DEFAULT,
         "role":            UserRole.admin,
         "gender":          "Female",
     },
     {
         "full_name":       "Mr. Emeka Obi",
-        "email":           "teacher@loreto.edu.ng",
+        "email":           "teacher@loreto.co.zw",
         "hashed_password": HASHED_DEFAULT,
         "role":            UserRole.teacher,
         "subject_code":    "PHY301",
@@ -98,7 +98,7 @@ SEED_USERS: list[dict] = [
     },
     {
         "full_name":       "Amaka Okonkwo",
-        "email":           "student1@loreto.edu.ng",
+        "email":           "student1@loreto.co.zw",
         "hashed_password": HASHED_DEFAULT,
         "role":            UserRole.student,
         "class_level":     "L6",
@@ -106,7 +106,7 @@ SEED_USERS: list[dict] = [
     },
     {
         "full_name":       "Chidi Nwosu",
-        "email":           "student2@loreto.edu.ng",
+        "email":           "student2@loreto.co.zw",
         "hashed_password": HASHED_DEFAULT,
         "role":            UserRole.student,
         "class_level":     "Form4",
@@ -114,7 +114,7 @@ SEED_USERS: list[dict] = [
     },
     {
         "full_name":       "Ngozi Adeyemi",
-        "email":           "student3@loreto.edu.ng",
+        "email":           "student3@loreto.co.zw",
         "hashed_password": HASHED_DEFAULT,
         "role":            UserRole.student,
         "class_level":     "Form3",
@@ -514,8 +514,11 @@ def _upsert_users(db) -> dict[str, User]:
     """Create users that don't already exist. Returns email→User map."""
     created: dict[str, User] = {}
     for data in SEED_USERS:
-        existing = db.query(User).filter(User.email == data["email"]).first()
+        legacy_email = data["email"].replace(".co.zw", ".edu.ng")
+        existing = db.query(User).filter(User.email.in_([data["email"], legacy_email])).first()
         if existing:
+            # Ensure email is updated to .co.zw if it was using the legacy domain
+            existing.email = data["email"]
             # Ensure the password hash matches Demo123! in case it was created with an old hash
             existing.hashed_password = hash_password(DEFAULT_PASSWORD)
             existing.is_active = True
@@ -674,7 +677,7 @@ def run_seed(allow_production: bool = False) -> None:
         print("[1/3] Seeding users ...")
         users = _upsert_users(db)
 
-        teacher = users.get("teacher@loreto.edu.ng")
+        teacher = users.get("teacher@loreto.co.zw") or users.get("teacher@loreto.edu.ng")
         if not teacher:
             teacher = db.query(User).filter(User.role == UserRole.teacher).first()
         if not teacher:
@@ -682,9 +685,9 @@ def run_seed(allow_production: bool = False) -> None:
 
         students = [
             u for u in [
-                users.get("student1@loreto.edu.ng"),
-                users.get("student2@loreto.edu.ng"),
-                users.get("student3@loreto.edu.ng"),
+                users.get("student1@loreto.co.zw") or users.get("student1@loreto.edu.ng"),
+                users.get("student2@loreto.co.zw") or users.get("student2@loreto.edu.ng"),
+                users.get("student3@loreto.co.zw") or users.get("student3@loreto.edu.ng"),
             ]
             if u is not None
         ]

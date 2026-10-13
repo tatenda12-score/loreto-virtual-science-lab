@@ -107,12 +107,12 @@ export default function Login() {
               </label>
               <input
                 id="email"
-                type="email"
-                autoComplete="email"
+                type="text"
+                autoComplete="username"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@loreto.edu.ng"
+                placeholder="admin.co.zw or you@loreto.co.zw"
                 className="w-full rounded-xl border border-white/20 bg-black/20 px-4 py-3 text-white placeholder-slate-400 text-sm shadow-inner outline-none transition-all focus:border-blue-400 focus:bg-black/40 focus:ring-2 focus:ring-blue-400/50 backdrop-blur-sm"
               />
             </div>

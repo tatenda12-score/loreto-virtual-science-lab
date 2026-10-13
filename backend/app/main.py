@@ -243,7 +243,7 @@ def setup_seed():
     try:
         from scripts.seed import run_seed
         run_seed(allow_production=True)
-        return {"status": "ok", "message": "Database seeded successfully. Admin credentials: admin@loreto.edu.ng / Demo123!"}
+        return {"status": "ok", "message": "Database seeded successfully. Admin credentials: admin@loreto.co.zw / Demo123!"}
     except Exception as exc:
         logger.error(f"Setup seed failed: {exc}")
         return JSONResponse(status_code=500, content={"status": "error", "detail": str(exc)})
