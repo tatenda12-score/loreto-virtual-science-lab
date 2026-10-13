@@ -69,6 +69,21 @@ def create_submission(
             detail=f"Experiment with id={payload.experiment_id} not found.",
         )
 
+    # ── Prevent retakes / duplicate submissions ───────────────────────
+    existing_submission = (
+        db.query(Submission)
+        .filter(
+            Submission.student_id == current_user.id,
+            Submission.experiment_id == payload.experiment_id,
+        )
+        .first()
+    )
+    if existing_submission:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You have already completed this experiment. Retakes are not permitted.",
+        )
+
     # ── Auto-grade using the science engine ───────────────────────────
     automatic_score: float | None = None
     observations = payload.recorded_observations or {}

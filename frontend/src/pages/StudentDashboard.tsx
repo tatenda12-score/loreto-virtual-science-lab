@@ -234,6 +234,13 @@ export default function StudentDashboard() {
 
   // ── Open experiment ───────────────────────────────────────────────────────
   function openExperiment(exp: Experiment) {
+    if (submissions.some((s) => s.experiment_id === exp.id)) {
+      setToast({
+        message: 'This experiment has already been completed and cannot be retaken.',
+        type: 'error',
+      })
+      return
+    }
     setActiveExp(exp)
   }
 
@@ -257,7 +264,7 @@ export default function StudentDashboard() {
         })
       } else {
         setToast({
-          message: `Auto-graded score: ${score}/100. Inaccurate observations or calculations. Please review theory and retry.`,
+          message: `Auto-graded score: ${score}/100. Inaccurate observations or calculations. Please review theory.`,
           type: 'error',
         })
       }
@@ -424,12 +431,14 @@ export default function StudentDashboard() {
                   return (
                     <div
                       key={exp.id}
-                      className={`rounded-xl border overflow-hidden transition-all duration-300 group cursor-pointer relative flex flex-col ${
+                      className={`rounded-xl border overflow-hidden transition-all duration-300 relative flex flex-col ${
                         isCompleted
-                          ? 'border-slate-300/80 bg-slate-100/90 grayscale-[35%] opacity-85 hover:opacity-100 hover:grayscale-0 hover:shadow-md'
-                          : 'border-slate-200 bg-white hover:shadow-lg hover:-translate-y-1'
+                          ? 'border-slate-300/80 bg-slate-100/90 grayscale-[35%] opacity-85 select-none'
+                          : 'border-slate-200 bg-white hover:shadow-lg hover:-translate-y-1 cursor-pointer group'
                       }`}
-                      onClick={() => openExperiment(exp)}
+                      onClick={() => {
+                        if (!isCompleted) openExperiment(exp)
+                      }}
                     >
                       <div className="p-6 flex-1 flex flex-col relative z-10">
                         <div className="flex items-start justify-between mb-4">
@@ -460,7 +469,7 @@ export default function StudentDashboard() {
                         </div>
                         <h3 className={`text-lg font-bold leading-tight mb-2 transition-colors ${
                           isCompleted
-                            ? 'text-slate-700 group-hover:text-slate-900'
+                            ? 'text-slate-700'
                             : 'text-slate-900 group-hover:text-blue-600'
                         }`}>
                           {exp.title}
@@ -479,15 +488,16 @@ export default function StudentDashboard() {
                         </p>
                         <button
                           id={`launch-exp-${exp.id}`}
+                          disabled={isCompleted}
                           className={`w-full rounded-xl py-2.5 text-sm font-bold transition-all mt-auto shadow-sm ${
                             isCompleted
-                              ? 'bg-slate-200/90 text-slate-700 hover:bg-slate-300 border border-slate-300'
+                              ? 'bg-slate-200/90 text-slate-600 border border-slate-300 cursor-not-allowed opacity-90'
                               : isInteractive
                               ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 hover:shadow-md'
                               : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-blue-400 hover:text-blue-700'
                           }`}
                         >
-                          {isCompleted ? '✓ Completed · Retake ⟳' : isInteractive ? 'Launch Simulation →' : 'Launch Experiment →'}
+                          {isCompleted ? '✓ Completed' : isInteractive ? 'Launch Simulation →' : 'Launch Experiment →'}
                         </button>
                       </div>
                     </div>
