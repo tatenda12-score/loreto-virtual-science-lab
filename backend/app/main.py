@@ -242,7 +242,7 @@ def fix_enums():
 def setup_seed():
     try:
         from scripts.seed import run_seed
-        run_seed()
+        run_seed(allow_production=True)
         return {"status": "ok", "message": "Database seeded successfully. Admin credentials: admin@loreto.edu.ng / Demo123!"}
     except Exception as exc:
         logger.error(f"Setup seed failed: {exc}")

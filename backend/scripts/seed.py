@@ -255,6 +255,26 @@ SEED_EXPERIMENTS: list[dict] = [
         "class_level":     "Form4",
     },
     {
+        "title":           "Testing For Starch",
+        "subject":         Subject.biology,
+        "difficulty":      Difficulty.beginner,
+        "simulation_type": SimulationType.food_tests,
+        "status":          ExperimentStatus.published,
+        "topic":           "Plant Nutrition & Photosynthesis",
+        "description":     "Test for starch in plant tissues to investigate the products of photosynthesis.",
+        "materials":       ["Test tubes", "Iodine solution", "Leaf samples", "Water bath"],
+        "instructions": [
+            {"step": 1, "action": "Place a leaf sample in a test tube."},
+            {"step": 2, "action": "Add iodine solution and observe colour change."},
+            {"step": 3, "action": "Record the colour change and your conclusion."},
+        ],
+        "parameters": {
+            "expected_values": {"starch_test_result": "Blue-black colour indicates starch present"},
+            "tolerance": 0.0,
+        },
+        "class_level":     "Form4",
+    },
+    {
         "title":           "Food Tests",
         "subject":         Subject.biology,
         "difficulty":      Difficulty.beginner,
@@ -587,7 +607,8 @@ def _upsert_experiments(db, teacher: User) -> list[Experiment]:
                 print(f"  [OK]   Experiment already canonical: '{data['title']}'")
             experiments.append(existing)
         else:
-            exp = Experiment(**data, created_by=teacher.id)
+            creator_id = teacher.id if teacher else None
+            exp = Experiment(**data, created_by=creator_id)
             db.add(exp)
             db.flush()
             print(f"  [OK]   Created experiment: '{data['title']}'")
@@ -639,9 +660,9 @@ def _seed_submissions(
 # Entry point
 # ===========================================================================
 
-def run_seed() -> None:
+def run_seed(allow_production: bool = False) -> None:
     from app.core.config import settings
-    if settings.APP_ENV.lower() == "production":
+    if settings.APP_ENV.lower() == "production" and not allow_production:
         raise RuntimeError("Seed script is disabled in production to prevent overwriting or creating demo data.")
 
     print("\n========================================")
@@ -653,19 +674,28 @@ def run_seed() -> None:
         print("[1/3] Seeding users ...")
         users = _upsert_users(db)
 
-        teacher  = users["teacher@loreto.edu.ng"]
+        teacher = users.get("teacher@loreto.edu.ng")
+        if not teacher:
+            teacher = db.query(User).filter(User.role == UserRole.teacher).first()
+        if not teacher:
+            teacher = db.query(User).filter(User.role == UserRole.admin).first()
+
         students = [
-            users["student1@loreto.edu.ng"],
-            users["student2@loreto.edu.ng"],
-            users["student3@loreto.edu.ng"],
+            u for u in [
+                users.get("student1@loreto.edu.ng"),
+                users.get("student2@loreto.edu.ng"),
+                users.get("student3@loreto.edu.ng"),
+            ]
+            if u is not None
         ]
 
         print("\n[2/3] Seeding experiments ...")
         experiments = _upsert_experiments(db, teacher)
-        ohm_experiment = experiments[0]   # Ohm's Law is always first
+        ohm_experiment = experiments[0] if experiments else None
 
         print("\n[3/3] Seeding submissions ...")
-        _seed_submissions(db, students, ohm_experiment)
+        if students and ohm_experiment:
+            _seed_submissions(db, students, ohm_experiment)
 
         db.commit()
         print("\n[DONE] Seed completed successfully.")

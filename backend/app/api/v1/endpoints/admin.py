@@ -265,7 +265,8 @@ def delete_user(
     db.query(AuditLog).filter(AuditLog.user_id == user_id).delete(synchronize_session=False)
     db.query(Submission).filter(Submission.student_id == user_id).delete(synchronize_session=False)
     if user.role == UserRole.teacher:
-        db.query(Experiment).filter(Experiment.created_by == user_id).delete(synchronize_session=False)
+        # Preserve curriculum experiments: unlink creator rather than deleting them
+        db.query(Experiment).filter(Experiment.created_by == user_id).update({Experiment.created_by: None}, synchronize_session=False)
 
     db.delete(user)
     db.commit()
