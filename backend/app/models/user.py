@@ -115,6 +115,28 @@ class User(Base):
         comment="Optional — used for school reporting only.",
     )
 
+    # ── Password Recovery ─────────────────────────────────────────────
+    security_question_1: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        comment="First security question for password reset",
+    )
+    security_answer_1_hash: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        comment="Hashed answer for security question 1",
+    )
+    security_question_2: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        comment="Optional second security question for password reset",
+    )
+    security_answer_2_hash: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        comment="Hashed answer for security question 2",
+    )
+
     # ── Audit timestamps ──────────────────────────────────────────────
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

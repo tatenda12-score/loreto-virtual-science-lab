@@ -48,6 +48,28 @@ async def lifespan(app: FastAPI):
     logger.info(f"   Environment : {settings.APP_ENV}")
     logger.info(f"   Version     : {settings.APP_VERSION}")
 
+    # Auto-ensure security questions and schema columns
+    try:
+        from sqlalchemy import text
+        from app.db.database import SessionLocal, engine
+        with SessionLocal() as db:
+            is_sqlite = engine.url.drivername.startswith("sqlite")
+            for col in ["security_question_1", "security_answer_1_hash", "security_question_2", "security_answer_2_hash"]:
+                try:
+                    if is_sqlite:
+                        pragma = db.execute(text("PRAGMA table_info(users)")).fetchall()
+                        existing_cols = [r[1] for r in pragma]
+                        if col not in existing_cols:
+                            db.execute(text(f"ALTER TABLE users ADD COLUMN {col} VARCHAR(255)"))
+                            db.commit()
+                    else:
+                        db.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} VARCHAR(255)"))
+                        db.commit()
+                except Exception as col_exc:
+                    logger.debug(f"Column check note for {col}: {col_exc}")
+    except Exception as exc:
+        logger.warning(f"Startup column check note: {exc}")
+
     # Seed demo data only in development mode (production should use migrations)
     import os
     if settings.is_development and not os.environ.get("RENDER"):
@@ -226,6 +248,13 @@ def fix_enums():
                 db.commit()
             except Exception as e:
                 logging.warning(f"class_level column note: {e}")
+
+            for col in ["security_question_1", "security_answer_1_hash", "security_question_2", "security_answer_2_hash"]:
+                try:
+                    db.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} VARCHAR(255) NULL"))
+                except Exception:
+                    pass
+            db.commit()
 
         return {"status": "ok", "message": "Enums and schema updated", "values_processed": added}
     except Exception as exc:

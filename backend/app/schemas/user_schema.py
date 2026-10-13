@@ -114,6 +114,26 @@ class UserRegister(BaseModel):
         examples=["Female"],
         description="Optional gender for school reporting.",
     )
+    security_question_1: Optional[str] = Field(
+        default=None,
+        max_length=255,
+        description="First security question for password recovery",
+    )
+    security_answer_1: Optional[str] = Field(
+        default=None,
+        max_length=255,
+        description="Answer to first security question",
+    )
+    security_question_2: Optional[str] = Field(
+        default=None,
+        max_length=255,
+        description="Optional second security question for password recovery",
+    )
+    security_answer_2: Optional[str] = Field(
+        default=None,
+        max_length=255,
+        description="Answer to second security question",
+    )
 
     @field_validator("full_name")
     @classmethod
@@ -263,6 +283,34 @@ class UserInDB(UserResponse):
 
 class UserPasswordUpdate(BaseModel):
     current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def password_complexity(cls, v: str) -> str:
+        if not any(c.isupper() for c in v):
+            raise ValueError("Password must contain at least one uppercase letter.")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("Password must contain at least one digit.")
+        special_chars = set("!@#$%^&*()-_=+[]{}|;:',.<>?/")
+        if not any(c in special_chars for c in v):
+            raise ValueError("Password must contain at least one special character.")
+        return v
+
+
+# ---------------------------------------------------------------------------
+# Password recovery schemas
+# ---------------------------------------------------------------------------
+class SecurityQuestionsRequest(BaseModel):
+    email: str
+
+class SecurityQuestionsResponse(BaseModel):
+    email: str
+    questions: list[str]
+
+class PasswordResetWithQuestions(BaseModel):
+    email: str
+    answers: list[str]
     new_password: str = Field(..., min_length=8, max_length=128)
 
     @field_validator("new_password")

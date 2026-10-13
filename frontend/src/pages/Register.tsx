@@ -6,6 +6,20 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { registerStudent, getErrorMessage } from '@/services/api'
 
+const SECURITY_QUESTIONS_1 = [
+  'What was the name of your primary school?',
+  'What is your favorite science subject?',
+  'What is the name of your home village or city?',
+  'What was the name of your first childhood pet?',
+]
+
+const SECURITY_QUESTIONS_2 = [
+  'Who was your favorite teacher at Loreto?',
+  'What was your childhood nickname?',
+  'What is your mother’s maiden name?',
+  'What is your favorite book or science topic?',
+]
+
 export default function Register() {
   const [formData, setFormData] = useState({
     full_name: '',
@@ -13,7 +27,11 @@ export default function Register() {
     password: '',
     confirm_password: '',
     class_level: '',
-    gender: ''
+    gender: '',
+    security_question_1: SECURITY_QUESTIONS_1[0],
+    security_answer_1: '',
+    security_question_2: SECURITY_QUESTIONS_2[0],
+    security_answer_2: '',
   })
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -70,6 +88,11 @@ export default function Register() {
       return
     }
 
+    if (!formData.security_answer_1.trim()) {
+      setError('Please provide an answer for Security Question 1 (used for password reset).')
+      return
+    }
+
     setLoading(true)
     setColdStart(false)
     try {
@@ -78,7 +101,11 @@ export default function Register() {
         email: formData.email.trim(),
         password: formData.password,
         class_level: formData.class_level,
-        gender: formData.gender
+        gender: formData.gender,
+        security_question_1: formData.security_question_1,
+        security_answer_1: formData.security_answer_1.trim(),
+        security_question_2: formData.security_question_2 || undefined,
+        security_answer_2: formData.security_answer_2.trim() || undefined,
       })
       setSuccess(true)
     } catch (err) {
@@ -230,6 +257,75 @@ export default function Register() {
                   placeholder="••••••••"
                   className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 text-sm shadow-sm outline-none transition-all focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20"
                 />
+              </div>
+
+              {/* Password Recovery Questions */}
+              <div className="pt-3 border-t border-slate-200 space-y-3.5">
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
+                    <span>🛡️</span> Security Recovery Questions
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Answer 1 or 2 questions so you can quickly reset your password if you ever forget it.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-700" htmlFor="security_question_1">
+                    Security Question 1 <span className="text-red-500">*</span>
+                  </Label>
+                  <select
+                    id="security_question_1"
+                    name="security_question_1"
+                    required
+                    value={formData.security_question_1}
+                    onChange={handleChange}
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 text-xs shadow-sm outline-none transition-all focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20"
+                  >
+                    {SECURITY_QUESTIONS_1.map((q) => (
+                      <option key={q} value={q}>{q}</option>
+                    ))}
+                  </select>
+                  <Input
+                    id="security_answer_1"
+                    name="security_answer_1"
+                    type="text"
+                    required
+                    value={formData.security_answer_1}
+                    onChange={handleChange}
+                    placeholder="Your answer to Question 1"
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 text-xs shadow-sm outline-none transition-all focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-700" htmlFor="security_question_2">
+                    Security Question 2 (Optional)
+                  </Label>
+                  <select
+                    id="security_question_2"
+                    name="security_question_2"
+                    value={formData.security_question_2}
+                    onChange={handleChange}
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 text-xs shadow-sm outline-none transition-all focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20"
+                  >
+                    <option value="">None (skip second question)</option>
+                    {SECURITY_QUESTIONS_2.map((q) => (
+                      <option key={q} value={q}>{q}</option>
+                    ))}
+                  </select>
+                  {formData.security_question_2 && (
+                    <Input
+                      id="security_answer_2"
+                      name="security_answer_2"
+                      type="text"
+                      value={formData.security_answer_2}
+                      onChange={handleChange}
+                      placeholder="Your answer to Question 2"
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 text-xs shadow-sm outline-none transition-all focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20"
+                    />
+                  )}
+                </div>
               </div>
 
               {/* Cold-start awareness banner */}

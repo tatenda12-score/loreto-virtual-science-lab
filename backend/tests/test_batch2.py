@@ -200,10 +200,10 @@ class TestBatch2(unittest.TestCase):
         """G. Seed helper functions populate users, experiments with status/simulation_type."""
         db = TestingSessionLocal()
         users_map = _upsert_users(db)
-        self.assertIn("admin@loreto.edu.ng", users_map)
-        self.assertIn("teacher@loreto.edu.ng", users_map)
+        self.assertIn("admin@loreto.co.zw", users_map)
+        self.assertIn("teacher@loreto.co.zw", users_map)
 
-        teacher = users_map["teacher@loreto.edu.ng"]
+        teacher = users_map["teacher@loreto.co.zw"]
         experiments = _upsert_experiments(db, teacher)
         self.assertTrue(len(experiments) >= 2)
         # All SimulationType enum values the seed uses

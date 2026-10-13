@@ -102,10 +102,14 @@ class Settings(BaseSettings):
         # Always allow onrender.com and .co.zw hostnames in production so Render healthchecks/proxies pass
         hosts = list(v)
         if not any("onrender.com" in h for h in hosts):
-            hosts.extend(["loreto-virtual-science-lab.onrender.com", "*.onrender.com"])
-        for domain in ["*.co.zw", "admin.co.zw", "loreto.co.zw", "*.loreto.co.zw"]:
-            if domain not in hosts:
-                hosts.append(domain)
+            hosts.extend([
+                "loreto-virtual-science-lab.onrender.com",
+                "*.onrender.com",
+                "*.co.zw",
+                "admin.co.zw",
+                "loreto.co.zw",
+                "*.loreto.co.zw",
+            ])
         return hosts
 
     @model_validator(mode="after")

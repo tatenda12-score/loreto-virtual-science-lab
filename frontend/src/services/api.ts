@@ -173,6 +173,10 @@ export interface RegisterPayload {
   password:     string
   class_level?: string
   gender?:      string
+  security_question_1?: string
+  security_answer_1?:   string
+  security_question_2?: string
+  security_answer_2?:   string
 }
 
 export interface TeacherCreatePayload {
@@ -343,6 +347,22 @@ export async function logoutUser(): Promise<void> {
 /** Register a new student account. */
 export async function registerStudent(data: RegisterPayload): Promise<UserProfile> {
   const res = await api.post<UserProfile>('/auth/register', data)
+  return res.data
+}
+
+/** Fetch security questions configured for an account. */
+export async function fetchSecurityQuestions(email: string): Promise<{ email: string; questions: string[] }> {
+  const res = await api.post<{ email: string; questions: string[] }>('/auth/forgot-password/questions', { email })
+  return res.data
+}
+
+/** Reset password using answers to security questions. */
+export async function resetPasswordWithSecurityQuestions(data: {
+  email: string
+  answers: string[]
+  new_password: string
+}): Promise<{ status: string; message: string }> {
+  const res = await api.post<{ status: string; message: string }>('/auth/forgot-password/reset', data)
   return res.data
 }
 

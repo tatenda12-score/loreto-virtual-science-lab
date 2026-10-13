@@ -418,42 +418,76 @@ export default function StudentDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredExperiments.map((exp) => {
                   const isInteractive = SimulationRegistry[exp.simulation_type] !== undefined;
+                  const sub = submissions.find((s) => s.experiment_id === exp.id);
+                  const isCompleted = !!sub;
+
                   return (
                     <div
                       key={exp.id}
-                      className="rounded-xl border border-slate-200 bg-white overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative flex flex-col"
+                      className={`rounded-xl border overflow-hidden transition-all duration-300 group cursor-pointer relative flex flex-col ${
+                        isCompleted
+                          ? 'border-slate-300/80 bg-slate-100/90 grayscale-[35%] opacity-85 hover:opacity-100 hover:grayscale-0 hover:shadow-md'
+                          : 'border-slate-200 bg-white hover:shadow-lg hover:-translate-y-1'
+                      }`}
                       onClick={() => openExperiment(exp)}
                     >
                       <div className="p-6 flex-1 flex flex-col relative z-10">
                         <div className="flex items-start justify-between mb-4">
-                          <span className="text-3xl drop-shadow-sm">{SUBJECT_ICONS[exp.subject] ?? '🔬'}</span>
-                          <div className="flex flex-col items-end gap-2">
-                            <span className={`text-[10px] px-2.5 py-1 rounded-md font-bold uppercase tracking-wider shadow-sm ${DIFF_BADGE[exp.difficulty] ?? ''}`}>
-                              {exp.difficulty}
-                            </span>
-                            {isInteractive && (
-                              <span className="text-[10px] px-2.5 py-1 rounded-md font-bold bg-blue-100 text-blue-700 border border-blue-200 uppercase tracking-wider shadow-sm">
-                                Interactive
+                          <span className={`text-3xl drop-shadow-sm ${isCompleted ? 'opacity-80' : ''}`}>
+                            {SUBJECT_ICONS[exp.subject] ?? '🔬'}
+                          </span>
+                          <div className="flex flex-col items-end gap-1.5">
+                            {isCompleted && (
+                              <span className="text-[10px] px-2.5 py-1 rounded-md font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase tracking-wider shadow-sm flex items-center gap-1">
+                                ✓ Done {sub?.automatic_score !== null ? `(${sub.automatic_score}%)` : ''}
                               </span>
                             )}
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-[10px] px-2.5 py-1 rounded-md font-bold uppercase tracking-wider shadow-sm ${DIFF_BADGE[exp.difficulty] ?? ''}`}>
+                                {exp.difficulty}
+                              </span>
+                              {isInteractive && (
+                                <span className={`text-[10px] px-2.5 py-1 rounded-md font-bold uppercase tracking-wider shadow-sm ${
+                                  isCompleted
+                                    ? 'bg-slate-200 text-slate-600 border border-slate-300'
+                                    : 'bg-blue-100 text-blue-700 border border-blue-200'
+                                }`}>
+                                  Interactive
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        <h3 className="text-lg font-bold text-slate-900 leading-tight mb-2 group-hover:text-blue-600 transition-colors">
+                        <h3 className={`text-lg font-bold leading-tight mb-2 transition-colors ${
+                          isCompleted
+                            ? 'text-slate-700 group-hover:text-slate-900'
+                            : 'text-slate-900 group-hover:text-blue-600'
+                        }`}>
                           {exp.title}
                         </h3>
                         {exp.topic && (
-                          <p className="text-xs text-blue-600/80 mb-3 font-semibold uppercase tracking-wide">{exp.topic}</p>
+                          <p className={`text-xs mb-3 font-semibold uppercase tracking-wide ${
+                            isCompleted ? 'text-slate-500' : 'text-blue-600/80'
+                          }`}>
+                            {exp.topic}
+                          </p>
                         )}
-                        <p className="text-sm text-slate-600 mb-6 line-clamp-3 flex-1 leading-relaxed">{exp.description}</p>
+                        <p className={`text-sm mb-6 line-clamp-3 flex-1 leading-relaxed ${
+                          isCompleted ? 'text-slate-500' : 'text-slate-600'
+                        }`}>
+                          {exp.description}
+                        </p>
                         <button
                           id={`launch-exp-${exp.id}`}
                           className={`w-full rounded-xl py-2.5 text-sm font-bold transition-all mt-auto shadow-sm ${
-                            isInteractive
+                            isCompleted
+                              ? 'bg-slate-200/90 text-slate-700 hover:bg-slate-300 border border-slate-300'
+                              : isInteractive
                               ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 hover:shadow-md'
                               : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-blue-400 hover:text-blue-700'
                           }`}
                         >
-                          {isInteractive ? 'Launch Simulation →' : 'Launch Experiment →'}
+                          {isCompleted ? '✓ Completed · Retake ⟳' : isInteractive ? 'Launch Simulation →' : 'Launch Experiment →'}
                         </button>
                       </div>
                     </div>

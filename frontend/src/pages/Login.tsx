@@ -15,7 +15,7 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { getErrorMessage } from '@/services/api'
+import { getErrorMessage, fetchSecurityQuestions, resetPasswordWithSecurityQuestions } from '@/services/api'
 
 export default function Login() {
   const { login } = useAuth()
@@ -26,6 +26,17 @@ export default function Login() {
   const [error,    setError]    = useState<string | null>(null)
   const [loading,  setLoading]  = useState(false)
   const [coldStart, setColdStart] = useState(false)
+
+  // Forgot password modal state
+  const [showForgotModal, setShowForgotModal] = useState(false)
+  const [fpEmail, setFpEmail] = useState('')
+  const [fpStep, setFpStep] = useState<'email' | 'questions'>('email')
+  const [fpQuestions, setFpQuestions] = useState<string[]>([])
+  const [fpAnswers, setFpAnswers] = useState<string[]>(['', ''])
+  const [fpNewPassword, setFpNewPassword] = useState('')
+  const [fpLoading, setFpLoading] = useState(false)
+  const [fpError, setFpError] = useState<string | null>(null)
+  const [fpSuccess, setFpSuccess] = useState<string | null>(null)
 
   // Show cold-start message after 5 seconds of loading
   useEffect(() => {
@@ -51,6 +62,67 @@ export default function Login() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleFindAccount(e: FormEvent) {
+    e.preventDefault()
+    setFpError(null)
+    setFpSuccess(null)
+    setFpLoading(true)
+    try {
+      const res = await fetchSecurityQuestions(fpEmail.trim())
+      setFpQuestions(res.questions)
+      setFpAnswers(new Array(res.questions.length).fill(''))
+      setFpStep('questions')
+    } catch (err: any) {
+      setFpError(err?.response?.data?.detail || 'Account not found or no security questions configured.')
+    } finally {
+      setFpLoading(false)
+    }
+  }
+
+  async function handleResetPassword(e: FormEvent) {
+    e.preventDefault()
+    setFpError(null)
+    setFpSuccess(null)
+    if (fpNewPassword.length < 6) {
+      setFpError('New password must be at least 6 characters.')
+      return
+    }
+    for (let i = 0; i < fpQuestions.length; i++) {
+      if (!fpAnswers[i]?.trim()) {
+        setFpError('Please answer all security questions.')
+        return
+      }
+    }
+    setFpLoading(true)
+    try {
+      const res = await resetPasswordWithSecurityQuestions({
+        email: fpEmail.trim(),
+        answers: fpAnswers.map(a => a.trim()),
+        new_password: fpNewPassword,
+      })
+      setFpSuccess(res.message || 'Password reset successfully! You can now log in.')
+      setPassword(fpNewPassword)
+      setEmail(fpEmail.trim())
+      setTimeout(() => {
+        closeForgotModal()
+      }, 2000)
+    } catch (err: any) {
+      setFpError(err?.response?.data?.detail || 'Failed to reset password. Please check your answers.')
+    } finally {
+      setFpLoading(false)
+    }
+  }
+
+  function closeForgotModal() {
+    setShowForgotModal(false)
+    setFpStep('email')
+    setFpQuestions([])
+    setFpAnswers(['', ''])
+    setFpNewPassword('')
+    setFpError(null)
+    setFpSuccess(null)
   }
 
   return (
@@ -122,9 +194,16 @@ export default function Login() {
                 <label className="text-sm font-medium text-slate-100 drop-shadow-sm" htmlFor="password">
                   Password
                 </label>
-                <Link to="#" className="text-xs font-medium text-blue-300 hover:text-blue-200 transition-colors drop-shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFpEmail(email || '')
+                    setShowForgotModal(true)
+                  }}
+                  className="text-xs font-medium text-blue-300 hover:text-blue-200 transition-colors drop-shadow-sm"
+                >
                   Forgot password?
-                </Link>
+                </button>
               </div>
               <input
                 id="password"
@@ -184,6 +263,157 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      {/* ── Forgot Password Modal ── */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-lg rounded-2xl border border-white/20 bg-slate-900/90 p-6 md:p-8 shadow-2xl backdrop-blur-xl text-white">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-lg">
+                  🔑
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">Reset Password</h2>
+                  <p className="text-xs text-slate-400">Answer your security questions to recover access</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeForgotModal}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Error & Success banners */}
+            {fpError && (
+              <div className="mt-4 p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-xs">
+                {fpError}
+              </div>
+            )}
+            {fpSuccess && (
+              <div className="mt-4 p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 text-xs font-semibold">
+                ✓ {fpSuccess}
+              </div>
+            )}
+
+            {/* Step 1: Enter email */}
+            {fpStep === 'email' && (
+              <form onSubmit={handleFindAccount} className="mt-5 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                    Account Email Address
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={fpEmail}
+                    onChange={(e) => setFpEmail(e.target.value)}
+                    placeholder="student@loreto.co.zw or your email"
+                    className="w-full rounded-xl border border-white/20 bg-black/40 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    We'll look up your account's designated security questions.
+                  </p>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={closeForgotModal}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-white/10"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={fpLoading || !fpEmail.trim()}
+                    className="px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white shadow-lg transition-all"
+                  >
+                    {fpLoading ? 'Finding account…' : 'Continue →'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Step 2: Answer questions & New password */}
+            {fpStep === 'questions' && (
+              <form onSubmit={handleResetPassword} className="mt-5 space-y-4">
+                <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-500/30 text-xs text-blue-200">
+                  Account: <span className="font-semibold text-white">{fpEmail}</span>
+                </div>
+
+                {fpQuestions.map((q, idx) => (
+                  <div key={idx} className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-200">
+                      Question {idx + 1}: <span className="text-blue-300 font-normal">{q}</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={fpAnswers[idx] || ''}
+                      onChange={(e) => {
+                        const newAns = [...fpAnswers]
+                        newAns[idx] = e.target.value
+                        setFpAnswers(newAns)
+                      }}
+                      placeholder="Your secret answer"
+                      className="w-full rounded-xl border border-white/20 bg-black/40 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    />
+                  </div>
+                ))}
+
+                <div className="space-y-1.5 pt-2 border-t border-white/10">
+                  <label className="block text-xs font-semibold text-slate-200">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={fpNewPassword}
+                    onChange={(e) => setFpNewPassword(e.target.value)}
+                    placeholder="Enter at least 6 characters"
+                    className="w-full rounded-xl border border-white/20 bg-black/40 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
+                  />
+                </div>
+
+                <div className="flex justify-between items-center gap-3 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFpStep('email')
+                      setFpError(null)
+                    }}
+                    className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/10"
+                  >
+                    ← Back
+                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={closeForgotModal}
+                      className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-white/10"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={fpLoading || !fpNewPassword}
+                      className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white shadow-lg transition-all"
+                    >
+                      {fpLoading ? 'Resetting…' : 'Reset Password & Sign In'}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
