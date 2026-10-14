@@ -172,6 +172,7 @@ def create_teacher(
     
     # Update log with the new ID
     log_action(db, _current_user.id, "teacher_created_complete", "User", str(new_teacher.id), {"email": payload.email})
+    db.commit()
     return UserResponse.model_validate(new_teacher)
 
 

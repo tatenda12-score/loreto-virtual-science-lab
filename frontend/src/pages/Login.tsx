@@ -16,6 +16,7 @@ import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { getErrorMessage, fetchSecurityQuestions, resetPasswordWithSecurityQuestions } from '@/services/api'
+import loretoBg from '@/assets/loreto-school-bg.jpg'
 
 export default function Login() {
   const { login } = useAuth()
@@ -128,7 +129,7 @@ export default function Login() {
   return (
     <div 
       className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-950 bg-cover bg-center"
-      style={{ backgroundImage: 'url(/loreto-school-bg.jpg)' }}
+      style={{ backgroundImage: `url(${loretoBg}), url('/loreto-school-bg.jpg')` }}
     >
       {/* ── Dark Overlay to maintain glassmorphism contrast ── */}
       <div className="absolute inset-0 bg-slate-950/80 mix-blend-multiply" />

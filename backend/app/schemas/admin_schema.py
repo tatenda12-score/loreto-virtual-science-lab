@@ -20,7 +20,7 @@ class TeacherCreate(BaseModel):
 
     full_name: str = Field(..., min_length=2, max_length=255)
     email: EmailStr
-    password: str = Field(..., min_length=7, max_length=128)
+    password: str = Field(..., min_length=6, max_length=128)
     subject_code: Optional[str] = Field(default=None, max_length=50)
     gender: Optional[str] = Field(default=None, max_length=20)
     class_level: Optional[str] = Field(default=None, max_length=50)
@@ -33,24 +33,33 @@ class TeacherCreate(BaseModel):
             raise ValueError("Full name must not be blank.")
         return v
 
-    @field_validator("email")
+    @field_validator("email", mode="before")
     @classmethod
-    def email_to_lowercase(cls, v: str) -> str:
-        return v.lower().strip()
+    def normalize_email(cls, v: str) -> str:
+        if isinstance(v, str):
+            v = v.strip().lower()
+            if "@" not in v:
+                if v.endswith(".co.zw") or v.endswith(".edu.ng"):
+                    parts = v.split(".")
+                    v = f"{parts[0]}@{'.'.join(parts[1:])}"
+                else:
+                    v = f"{v}@loreto.co.zw"
+        return v
 
     @field_validator("password")
     @classmethod
     def password_complexity(cls, v: str) -> str:
-        if v == "science":
-            return v
-            
-        if not any(c.isupper() for c in v):
-            raise ValueError("Password must contain at least one uppercase letter.")
-        if not any(c.isdigit() for c in v):
-            raise ValueError("Password must contain at least one digit.")
-        special_chars = set("!@#$%^&*()-_=+[]{}|;:',.<>?/")
-        if not any(c in special_chars for c in v):
-            raise ValueError("Password must contain at least one special character.")
+        v = v.strip()
+        if len(v) < 6:
+            raise ValueError("Password must be at least 6 characters.")
+        return v
+
+    @field_validator("subject_code", "gender", "class_level", mode="before")
+    @classmethod
+    def blank_to_none(cls, v: Optional[str]) -> Optional[str]:
+        if isinstance(v, str):
+            v = v.strip()
+            return v if v else None
         return v
 
 

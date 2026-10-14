@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { registerStudent, getErrorMessage } from '@/services/api'
+import labBg from '@/assets/lab-bg.jpg'
 
 const SECURITY_QUESTIONS_1 = [
   'What was the name of your primary school?',
@@ -122,7 +123,7 @@ export default function Register() {
   return (
     <div 
       className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-950 py-12 bg-cover bg-center"
-      style={{ backgroundImage: 'url(/lab-bg.jpg)' }}
+      style={{ backgroundImage: `url(${labBg}), url('/lab-bg.jpg')` }}
     >
       {/* ── Dark Overlay to maintain contrast ── */}
       <div className="absolute inset-0 bg-slate-950/80 mix-blend-multiply" />

@@ -33,7 +33,16 @@ import {
   CheckCircle2,
   XCircle,
   Archive,
-  Edit2
+  Edit2,
+  Copy,
+  Check,
+  Eye,
+  EyeOff,
+  Key,
+  Mail,
+  UserCheck,
+  ShieldCheck,
+  X
 } from 'lucide-react'
 import ExperimentBuilder from '@/components/experiments/ExperimentBuilder'
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard'
@@ -67,7 +76,18 @@ export default function AdminDashboard() {
   const [loadingTeachers, setLoadingTeachers] = useState(false)
   const [showCreateTeacher, setShowCreateTeacher] = useState(false)
   const [isCreatingTeacher, setIsCreatingTeacher] = useState(false)
-  const [newTeacher, setNewTeacher] = useState({ full_name: '', email: '', password: 'science', subject_code: '', gender: '', class_level: '' })
+  const [newTeacher, setNewTeacher] = useState({ full_name: '', email: '', password: 'science', subject_code: 'Physics', gender: 'male', class_level: 'Form3' })
+  const [showTeacherPassword, setShowTeacherPassword] = useState(false)
+  const [createTeacherError, setCreateTeacherError] = useState<string | null>(null)
+  const [createdTeacherModal, setCreatedTeacherModal] = useState<{
+    full_name: string
+    email: string
+    password: string
+    subject_code: string
+    class_level: string
+    gender?: string
+  } | null>(null)
+  const [copiedCredentials, setCopiedCredentials] = useState(false)
 
   // Students State
   const [students, setStudents] = useState<UserProfile[]>([])
@@ -203,17 +223,85 @@ export default function AdminDashboard() {
   async function handleCreateTeacher(e: React.FormEvent) {
     e.preventDefault()
     if (isCreatingTeacher) return
+    setCreateTeacherError(null)
+
+    const cleanName = newTeacher.full_name.trim()
+    let cleanEmail = newTeacher.email.trim().toLowerCase()
+    if (!cleanEmail.includes('@')) {
+      cleanEmail = `${cleanEmail}@loreto.co.zw`
+    }
+    const cleanPassword = newTeacher.password.trim() || 'science'
+
+    if (cleanPassword.length < 6) {
+      setCreateTeacherError('Password must be at least 6 characters long.')
+      return
+    }
+
     setIsCreatingTeacher(true)
     try {
-      const created = await createTeacher(newTeacher)
-      setTeachers([created, ...teachers])
+      const payload = {
+        full_name: cleanName,
+        email: cleanEmail,
+        password: cleanPassword,
+        subject_code: newTeacher.subject_code.trim() || undefined,
+        gender: newTeacher.gender || undefined,
+        class_level: newTeacher.class_level || undefined,
+      }
+      const created = await createTeacher(payload)
+      setTeachers(prev => [created, ...prev])
       setShowCreateTeacher(false)
-      setNewTeacher({ full_name: '', email: '', password: 'science', subject_code: '', gender: '', class_level: '' })
+
+      // Open detailed credentials modal popup
+      setCreatedTeacherModal({
+        full_name: created.full_name,
+        email: created.email,
+        password: cleanPassword,
+        subject_code: created.subject_code || newTeacher.subject_code || 'General Science',
+        class_level: created.class_level || newTeacher.class_level || 'All Classes',
+        gender: created.gender || newTeacher.gender || 'N/A',
+      })
+
+      // Reset form defaults
+      setNewTeacher({ full_name: '', email: '', password: 'science', subject_code: 'Physics', gender: 'male', class_level: 'Form3' })
+      setShowTeacherPassword(false)
+      setCreateTeacherError(null)
+
+      // Update statistics
+      setStats(prev => prev ? { ...prev, total_teachers: prev.total_teachers + 1 } : prev)
     } catch (e: any) {
-      alert(e.response?.data?.detail || e.message || 'Failed to create teacher.')
+      console.error('Failed to create teacher:', e)
+      const errDetail = e.response?.data?.detail
+      let message = 'Failed to create teacher account.'
+      if (Array.isArray(errDetail)) {
+        message = errDetail.map(err => err.msg || err).join('; ')
+      } else if (typeof errDetail === 'string') {
+        message = errDetail
+      } else if (e.message) {
+        message = e.message
+      }
+      setCreateTeacherError(message)
     } finally {
       setIsCreatingTeacher(false)
     }
+  }
+
+  function handleCopyCredentials() {
+    if (!createdTeacherModal) return
+    const loginUrl = typeof window !== 'undefined' && window.location.origin ? `${window.location.origin}/login` : 'https://loreto-virtual-science-lab.vercel.app/login'
+    const text = `Loreto High School Virtual Science Lab — Teacher Account Details:
+--------------------------------------------------------
+Full Name: ${createdTeacherModal.full_name}
+Login Email: ${createdTeacherModal.email}
+Password: ${createdTeacherModal.password}
+System Role: Teacher
+Subject: ${createdTeacherModal.subject_code}
+Assigned Class: ${createdTeacherModal.class_level}
+Login Portal: ${loginUrl}
+--------------------------------------------------------
+Please store these credentials safely and change password after initial sign in.`
+    navigator.clipboard.writeText(text)
+    setCopiedCredentials(true)
+    setTimeout(() => setCopiedCredentials(false), 2500)
   }
 
   function handleSaveExperiment(savedExp: Experiment) {
@@ -302,32 +390,136 @@ export default function AdminDashboard() {
         </div>
 
         {showCreateTeacher && (
-          <Card className="bg-white border-slate-200 shadow-sm">
-            <CardHeader className="border-b border-slate-100 pb-4 mb-4">
-              <CardTitle className="text-lg text-slate-900">Add New Teacher</CardTitle>
+          <Card className="bg-white border-blue-200 shadow-md ring-2 ring-blue-500/10 rounded-2xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50/50 border-b border-blue-100 pb-4 mb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg text-slate-900 flex items-center gap-2">
+                    <UserCheck className="w-5 h-5 text-blue-600" /> Add New Teacher Account
+                  </CardTitle>
+                  <CardDescription className="text-slate-500 text-xs mt-1">
+                    Provision a teacher account with instant login credentials.
+                  </CardDescription>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateTeacher(false)}
+                  className="p-1 rounded-lg hover:bg-slate-200/60 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </CardHeader>
             <CardContent>
+              {createTeacherError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-start gap-2">
+                  <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold">Creation Error</p>
+                    <p className="text-xs mt-0.5">{createTeacherError}</p>
+                  </div>
+                </div>
+              )}
               <form onSubmit={handleCreateTeacher} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input required placeholder="Full Name" className="bg-white border border-slate-300 rounded-md px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm" value={newTeacher.full_name} onChange={e => setNewTeacher({...newTeacher, full_name: e.target.value})} />
-                <input required type="email" placeholder="Email" className="bg-white border border-slate-300 rounded-md px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm" value={newTeacher.email} onChange={e => setNewTeacher({...newTeacher, email: e.target.value})} />
-                <input required type="password" placeholder="Password" className="bg-white border border-slate-300 rounded-md px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm" value={newTeacher.password} onChange={e => setNewTeacher({...newTeacher, password: e.target.value})} />
-                <input required placeholder="Subject Code" className="bg-white border border-slate-300 rounded-md px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm" value={newTeacher.subject_code} onChange={e => setNewTeacher({...newTeacher, subject_code: e.target.value})} />
-                <select required className="bg-white border border-slate-300 rounded-md px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm" value={newTeacher.gender} onChange={e => setNewTeacher({...newTeacher, gender: e.target.value})}>
-                  <option value="">Select Gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-                <select required className="bg-white border border-slate-300 rounded-md px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm" value={newTeacher.class_level} onChange={e => setNewTeacher({...newTeacher, class_level: e.target.value})}>
-                  <option value="">Select Class</option>
-                  <option value="Form3">Form 3</option>
-                  <option value="Form4">Form 4</option>
-                  <option value="L6">Lower 6</option>
-                  <option value="Upper6">Upper 6</option>
-                </select>
-                <div className="flex justify-end gap-3 sm:col-span-2 mt-2">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+                  <input
+                    required
+                    placeholder="e.g. Dr. Emily Sibanda"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm text-sm"
+                    value={newTeacher.full_name}
+                    onChange={e => setNewTeacher({...newTeacher, full_name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Email / Username *</label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="e.g. esibanda@loreto.co.zw"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm text-sm"
+                    value={newTeacher.email}
+                    onChange={e => setNewTeacher({...newTeacher, email: e.target.value})}
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">If domain omitted, @loreto.co.zw is appended automatically.</p>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700">Initial Password *</label>
+                    <button
+                      type="button"
+                      onClick={() => setNewTeacher({...newTeacher, password: 'science'})}
+                      className="text-[11px] text-blue-600 hover:text-blue-700 font-semibold"
+                    >
+                      Reset to 'science'
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      required
+                      type={showTeacherPassword ? "text" : "password"}
+                      placeholder="Min 6 characters"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 pr-10 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm text-sm"
+                      value={newTeacher.password}
+                      onChange={e => setNewTeacher({...newTeacher, password: e.target.value})}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowTeacherPassword(!showTeacherPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showTeacherPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">Default is 'science'. Teacher can change this upon sign in.</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Subject Specialization *</label>
+                  <select
+                    required
+                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm text-sm"
+                    value={newTeacher.subject_code}
+                    onChange={e => setNewTeacher({...newTeacher, subject_code: e.target.value})}
+                  >
+                    <option value="Physics">Physics</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <option value="Biology">Biology</option>
+                    <option value="General Science">General Science</option>
+                    <option value="PHY101">Physics (PHY101)</option>
+                    <option value="CHM201">Chemistry (CHM201)</option>
+                    <option value="BIO301">Biology (BIO301)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Gender *</label>
+                  <select
+                    required
+                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm text-sm"
+                    value={newTeacher.gender}
+                    onChange={e => setNewTeacher({...newTeacher, gender: e.target.value})}
+                  >
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Assigned Class *</label>
+                  <select
+                    required
+                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm text-sm"
+                    value={newTeacher.class_level}
+                    onChange={e => setNewTeacher({...newTeacher, class_level: e.target.value})}
+                  >
+                    <option value="Form3">Form 3</option>
+                    <option value="Form4">Form 4</option>
+                    <option value="L6">Lower 6</option>
+                    <option value="Upper6">Upper 6</option>
+                  </select>
+                </div>
+                <div className="flex justify-end gap-3 sm:col-span-2 mt-4 pt-4 border-t border-slate-100">
                   <Button type="button" variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm" onClick={() => setShowCreateTeacher(false)}>Cancel</Button>
-                  <Button type="submit" disabled={isCreatingTeacher} className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-                    {isCreatingTeacher ? 'Saving...' : 'Save Teacher'}
+                  <Button type="submit" disabled={isCreatingTeacher} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md font-semibold px-6">
+                    {isCreatingTeacher ? 'Provisioning Account...' : 'Create Teacher Account'}
                   </Button>
                 </div>
               </form>
@@ -734,6 +926,115 @@ export default function AdminDashboard() {
           {activeTab === 'delete_users' && renderDeleteUsers()}
         </div>
       </div>
+
+      {/* --- Account Created Details Popup Modal --- */}
+      {createdTeacherModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden transform transition-all scale-100">
+            {/* Top decorative gradient bar */}
+            <div className="h-2.5 bg-gradient-to-r from-emerald-400 via-teal-500 to-blue-600"></div>
+
+            <div className="p-6 sm:p-8">
+              {/* Header Icon & Title */}
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 shadow-inner">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <div className="flex-1">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 mb-1">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Account Created
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+                    Teacher Account Created!
+                  </h3>
+                  <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
+                    Account provisioned successfully. Share these details with the teacher:
+                  </p>
+                </div>
+                <button
+                  onClick={() => setCreatedTeacherModal(null)}
+                  className="p-1 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Account Details Box */}
+              <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50/80 p-5 space-y-3.5">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200/60">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Teacher Name</span>
+                  <span className="text-sm font-extrabold text-slate-900">{createdTeacherModal.full_name}</span>
+                </div>
+
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200/60">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-blue-500" /> Login Email
+                  </span>
+                  <code className="text-sm font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200/60">
+                    {createdTeacherModal.email}
+                  </code>
+                </div>
+
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200/60">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <Key className="w-3.5 h-3.5 text-amber-500" /> Initial Password
+                  </span>
+                  <code className="text-sm font-black text-slate-900 bg-amber-50 px-3 py-1 rounded-md border border-amber-200 tracking-wider">
+                    {createdTeacherModal.password}
+                  </code>
+                </div>
+
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200/60">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Assigned Class</span>
+                  <span className="text-sm font-bold text-slate-800 bg-white px-2.5 py-0.5 rounded-md border border-slate-200">
+                    {createdTeacherModal.class_level}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Subject</span>
+                  <span className="text-sm font-bold text-slate-800 bg-white px-2.5 py-0.5 rounded-md border border-slate-200">
+                    {createdTeacherModal.subject_code}
+                  </span>
+                </div>
+              </div>
+
+              {/* Login Portal Link Info */}
+              <div className="mt-4 p-3 bg-blue-50/70 border border-blue-100 rounded-xl flex items-center justify-between text-xs text-blue-800">
+                <span className="font-semibold">Teacher Login Portal:</span>
+                <span className="font-mono text-blue-600 truncate max-w-[240px]">
+                  {typeof window !== 'undefined' ? `${window.location.origin}/login` : '/login'}
+                </span>
+              </div>
+
+              {/* Actions */}
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                <Button
+                  onClick={handleCopyCredentials}
+                  className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl shadow-md gap-2"
+                >
+                  {copiedCredentials ? (
+                    <>
+                      <Check className="w-4 h-4 text-emerald-400" /> Credentials Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" /> Copy All Details
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setCreatedTeacherModal(null)}
+                  className="border-slate-300 text-slate-700 hover:bg-slate-100 font-bold py-2.5 rounded-xl"
+                >
+                  Done
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
